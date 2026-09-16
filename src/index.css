@@ -1,0 +1,304 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Press+Start+2P&display=swap');
+
+:root {
+  --sonic-blue: #0A369D;
+  --sonic-blue-glow: rgba(10, 54, 157, 0.6);
+  --ring-yellow: #FFD700;
+  --neon-cyan: #00F3FF;
+  --shadow-red: #E60000;
+  --bg-dark: #0F172A;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: white;
+  overflow: hidden;
+}
+
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Beautiful Animated Background for Menus */
+.animated-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top left, #1a052b, #0A369D, #00F3FF);
+  background-size: 300% 300%;
+  animation: gradientBG 15s ease infinite;
+  z-index: 0;
+  opacity: 0.8;
+}
+.animated-bg::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: panBg 20s linear infinite;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes panBg {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 24px;
+}
+
+/* Text Glows */
+.text-neon {
+  font-family: 'Press Start 2P', cursive;
+  color: #fff;
+  text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 30px var(--sonic-blue);
+  letter-spacing: 4px;
+}
+.text-gold {
+  font-family: 'Press Start 2P', cursive;
+  color: var(--ring-yellow);
+  text-shadow: 0 0 10px #FFA500, 0 0 20px #FF4500, 2px 2px 0 #000;
+  letter-spacing: 2px;
+}
+
+/* Modern Button */
+.btn-modern {
+  background: linear-gradient(135deg, var(--sonic-blue), #00F3FF);
+  color: #FFF;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 2px;
+  padding: 16px 40px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 10px 20px var(--sonic-blue-glow), inset 0 2px 0 rgba(255,255,255,0.4);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-transform: uppercase;
+  z-index: 10;
+}
+.btn-modern:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 15px 25px var(--sonic-blue-glow), inset 0 2px 0 rgba(255,255,255,0.5);
+  background: linear-gradient(135deg, #00F3FF, var(--sonic-blue));
+}
+.btn-modern:active {
+  transform: translateY(2px);
+  box-shadow: 0 5px 10px var(--sonic-blue-glow);
+}
+
+/* Character Selection Cards */
+.char-card-modern {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 4px solid rgba(255, 215, 0, 0.5); /* Nostalgic Golden Border */
+  border-radius: 12px; /* Classic Blocky but smooth corners */
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 6px 6px 0px rgba(0,0,0,0.8); /* Classic Hard Shadow */
+}
+.char-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 100%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.char-card-modern:hover {
+  transform: translateY(-15px) scale(1.02);
+  border-color: var(--ring-yellow);
+  box-shadow: 10px 10px 0px rgba(0,0,0,0.9), 0 0 30px var(--ring-yellow);
+  background: rgba(10, 54, 157, 0.4);
+}
+.char-card-modern:hover::before {
+  opacity: 1;
+}
+.char-card-modern img {
+  transition: transform 0.4s ease;
+  filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.8));
+}
+.char-card-modern:hover img {
+  transform: scale(1.15) translateY(-10px);
+}
+
+/* Classic Floor Checkerboard Animation */
+.floor-container {
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 20vh;
+  overflow: hidden;
+  z-index: 10;
+  border-top: 6px solid #FFD700;
+  box-shadow: inset 0 20px 40px rgba(0,0,0,0.9), 0 -5px 15px rgba(255, 215, 0, 0.5);
+}
+
+.classic-checker-floor {
+  position: absolute;
+  bottom: 0; 
+  left: -50vw; /* Extend way beyond screen to hide perspective cuts */
+  width: 200vw;
+  height: 50vh; /* Taller so the perspective doesn't squish it too small */
+  background-image: 
+    linear-gradient(45deg, #D97726 25%, transparent 25%), 
+    linear-gradient(-45deg, #D97726 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #D97726 75%), 
+    linear-gradient(-45deg, transparent 75%, #D97726 75%);
+  background-size: 80px 80px;
+  background-position: 0 0, 0 40px, 40px -40px, -40px 0px;
+  background-color: #8C4410; /* Brown Base */
+  transform: perspective(300px) rotateX(60deg);
+  transform-origin: bottom center;
+  animation: scrollChecker 1.5s linear infinite;
+  opacity: 1;
+}
+
+@keyframes scrollChecker {
+  from { background-position: 0 0, 0 40px, 40px -40px, -40px 0px; }
+  to { background-position: -80px 0, -80px 40px, -40px -40px, -120px 0px; }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes blinkText {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.animate-blink {
+  animation: blinkText 1s infinite;
+}
+
+@keyframes panCloud {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(-150px); }
+}
+.animate-cloud {
+  animation: panCloud linear infinite;
+}
+
+@keyframes pulseNeon {
+  0% { box-shadow: 0 0 10px #FF0000; }
+  50% { box-shadow: 0 0 30px #FF4500; }
+  100% { box-shadow: 0 0 10px #FF0000; }
+}
+.animate-pulse {
+  animation: pulseNeon 2s infinite;
+}
+
+.sky-gradient {
+  background: linear-gradient(to bottom, #191970 0%, #0000CD 40%, #00BFFF 100%);
+}
+
+.water-shimmer {
+  background-image: 
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmerWater 3s linear infinite;
+}
+@keyframes shimmerWater {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Phaser Container */
+#game-container {
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0,0,0,1);
+  border: none;
+  background-color: transparent;
+}
+
+/* Sway Animation */
+@keyframes sway {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+.animate-sway {
+  transform-origin: bottom center;
+  animation: sway 3s ease-in-out infinite alternate;
+}
+
+/* Epic Logo */
+.epic-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  margin-bottom: 50px;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+}
+
+.epic-logo-text {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(40px, 8vw, 120px);
+  font-weight: bold;
+  background: linear-gradient(to bottom, #FFD700 0%, #FFA500 50%, #FF4500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 4px #000;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  text-align: center;
+  filter: drop-shadow(0 8px 0px #0000AA);
+  transform: skew(-10deg);
+}
+
+.epic-subtitle {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(16px, 3vw, 40px);
+  font-weight: 900;
+  color: #FFFFFF;
+  background: #E60000;
+  padding: 5px 30px;
+  border: 4px solid #FFF;
+  border-radius: 50px;
+  margin-top: -10px;
+  box-shadow: 0 5px 0 #000;
+  transform: skew(-10deg);
+}
+
+/* CSS Palm Tree Builder */
+
+.neon-grid-floor {
+  animation: gridMove 2s linear infinite;
+}
+
+@keyframes gridMove {
+  from { background-position: 0 0; }
+  to { background-position: 0 50px; }
+}

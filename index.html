@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sonic Web Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <script>
+      window.addEventListener("error", function(e) { fetch("http://localhost:9999/log-error", {method:"POST", body: e.message + " at " + e.filename + ":" + e.lineno}); });
+      window.addEventListener("unhandledrejection", function(e) { fetch("http://localhost:9999/log-error", {method:"POST", body: e.reason ? (e.reason.stack || e.reason.message) : "unhandled rejection"}); });
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
