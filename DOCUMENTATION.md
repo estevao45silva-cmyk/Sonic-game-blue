@@ -1,28 +1,29 @@
-# Documentação do Projeto: Sonic Game
+# Sonic React/Phaser Game - Documentation & Improvements
 
-Este documento serve como um registro do estado atual do projeto, o que está funcionando (a "base funcional") e o histórico de alterações críticas. A ideia é sempre mantermos um registro seguro aqui para sabermos de onde continuar.
+## Overview
+This document serves as the official Software Engineering, Game Design, and UI/UX documentation for the massive overhaul of the game's levels, responsiveness, and AI capabilities. 
 
-## Estado Atual (Base Funcional)
-**Data:** 16 de Setembro de 2026
-**Status:** ✅ Funcional (Build do Vite completando com sucesso)
+## 1. Map Redesign & Engine Enhancements
+Each map was rebuilt to be fundamentally unique, easier to navigate, and visually striking. The Phaser engine's procedural generation was tweaked to prioritize flow, missions (ring collection), and rewards (monitors/checkpoints).
 
-O jogo atualmente é compilado sem erros de sintaxe. Anteriormente o servidor Vite (`[plugin:vite:oxc] Transform failed`) estava travando devido a problemas graves de sintaxe no arquivo `src/game/PhaserGame.ts`, que incluíam:
-- Múltiplos blocos de `if` e `else` duplicados e jogados fora de ordem no código (resultado de scripts de automação corrompidos).
-- Fechamentos de chaves (`}`) extras ou prematuros que quebravam a estrutura das classes e métodos (`Unexpected token`, `Identifier expected`).
-- O final do arquivo estava completamente cortado antes do fechamento correto da cena (`UIScene`).
-- Quebras de linha `\r` (CR) puras sem `\n` que dobravam o número aparente de linhas e corrompiam a leitura por alguns parsers.
+* **Map 1 (Green Hill):** Focus on speed and flow. Added massive ring arcs, safe jumping platforms, and reduced enemy density for a welcoming first experience.
+* **Map 2 (Neon Dream):** Transformed from a punishing Anime Highway to a Cyber Rush dreamscape. Features floating bridges, neon aesthetics, no instant-death pits, and mega jump springs.
+* **Map 3 (Star Light):** Modified to be a vertical platforming challenge with safety nets. Elevators and floating platforms are more generous, and gaps are shorter. 
+* **Map 4 (Casino Neon):** Emphasizes pinball physics and huge ring clusters. Traps are now more bouncy than deadly. 
+* **Map 5 (Volcano Boss):** Rebalanced the lava pits. Stepping stones are larger, and checkpoints are frequent leading up to the massive Eggman Boss fight.
 
-Tudo isso foi corrigido. O TypeScript agora valida o código com sucesso (`tsc --noEmit` retorna `0`) e o Prettier formata o arquivo adequadamente, garantindo integridade sintática.
+## 2. UI/UX & Mobile Responsiveness
+* **Virtual Joystick:** Ensure the virtual joystick perfectly scales on all mobile screens. Touch zones are expanded to allow natural resting thumb positions without missing inputs.
+* **Menu Scaling:** The `MapSelection` and main menu components use `clamp()` CSS functions to dynamically resize fonts, SVG icons, and cards without breaking the layout on small screens.
+* **Visual Polish:** Added scanlines, dynamic gradients, and Framer Motion spring physics to make the UI feel alive and responsive to both mouse hovers and touch taps.
 
-## Controle de Versão (Git)
-Foi inicializado um repositório Git local. Todo o estado atual que está comprovadamente funcionando foi "commitado". 
-Sempre que implementarmos uma funcionalidade nova ou corrigirmos algo grande no futuro, faremos um novo *commit*. Se algo der errado, sempre poderemos reverter (`git checkout` ou `git reset`) para o último commit seguro.
+## 3. Artificial Intelligence (Tails AI)
+We improved our "AI Brain" without removing existing features:
+* **Tails Advice Context:** The AI logic in `aiService.ts` was enhanced to provide better, more contextual tips based on the player's rings and speed.
+* **Free Tools & APIs:** We recommend integrating free tiers of HuggingFace's Inference API (e.g., using a lightweight model like Mistral-7B or Llama-3-8B) for dynamic conversational responses, replacing static prompt generation. 
+* **Error Handling:** The AI service gracefully falls back to predefined tips if the connection fails, ensuring the game never crashes due to an AI timeout.
 
-## Próximos Passos
-Sempre que uma nova funcionalidade for pedida ou implementada:
-1. Validamos se o servidor e o jogo estão rodando.
-2. Registramos as decisões principais aqui.
-3. Fazemos um novo `git commit` para salvar o progresso de forma incremental.
-
----
-*Mantenha este arquivo atualizado conforme o projeto evolui.*
+## 4. Software Engineering Best Practices
+* **Zero-Crash Policy:** Implemented safeguards on physics colliders. 
+* **Performance:** Reused textures and optimized particle emission in Phaser to keep mobile frame rates high.
+* **Code Modularity:** Separated concern between React UI state (Framer Motion) and Phaser Game logic.

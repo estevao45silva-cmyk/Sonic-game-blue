@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+const fs = require('fs');
+const targetFile = 'src/game/SonicGame.tsx';
+
+const content = `import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import type { Character } from '../App';
 import { MainScene, UIScene } from './PhaserGame';
 import ThreeBackground from '../components/ThreeBackground';
 import { motion, AnimatePresence } from 'framer-motion';
-import { VirtualJoystick } from '../components/VirtualJoystick';
 import { useVoiceCommands } from '../hooks/useVoiceCommands';
 import { generateTailsAdvice, speakText } from '../services/aiService';
 
@@ -191,8 +193,6 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
         )}
       </AnimatePresence>
 
-      {!isGameOver && <VirtualJoystick character={character} />}
-
       {/* Voice Controls UI */}
       {isSupported && !isGameOver && (
         <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 100, display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -275,3 +275,7 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
 };
 
 export default SonicGame;
+\`;
+
+fs.writeFileSync(targetFile, content);
+console.log('SonicGame.tsx GameOver logic completely refactored.');

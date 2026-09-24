@@ -1,40 +1,28 @@
 const fs = require('fs');
-let c = fs.readFileSync('src/game/PhaserGame.ts', 'utf8');
+const targetFile = 'src/game/PhaserGame.ts';
+let content = fs.readFileSync(targetFile, 'utf8');
 
-const anchor1 = "if (this.playerGif) {";
-const anchor2 = "// Zoom out in High Speed";
+// 1. Fix endWall position
+content = content.replace('if (x === 398) {', 'if (x === mapCols - 2) {');
 
-const index1 = c.indexOf(anchor1);
-const index2 = c.indexOf(anchor2, index1);
+// 2. Fix solid floor position for Boss Arena
+content = content.replace('if (x >= 370) {', 'if (x >= mapCols - 40) {');
 
-if (index1 !== -1 && index2 !== -1) {
-    const fixedContent = `if (this.playerGif) {
-      this.playerGif.setPosition(this.player.x, this.player.y);
-      if (this.player.flipX !== this.currentFlipX) {
-        this.currentFlipX = this.player.flipX;
-        this.playerGif.setScale(this.currentFlipX ? -1 : 1, 1);
-      }
-    }
+// 3. Make the 2D background transparent to show the 3D Background!
+// Let's find bgSky.fillRect and comment it out or change its size.
+// The sky is drawn by bgSky.fillGradientStyle(...) and then bgSky.fillRect(0, 0, 80000, 1200);
+content = content.replace(/this\.bgSky\.fillRect\(0, 0, 80000, 1200\);/g, '// this.bgSky.fillRect(0, 0, 80000, 1200); // HIDDEN to show 3D Background');
+content = content.replace(/this\.bgSky\.fillRect\(0,\s*0,\s*80000,\s*1200\);/g, '// Hidden sky');
 
-    // --- Dynamic Camera (Lookahead) & Boost FX ---
-    const cameraVelX = this.player.body.velocity.x;
-    const absVelX = Math.abs(cameraVelX);
+// Also, let's make sure bgMountainsNear and bgWater have some transparency so we can see the 3D background behind them?
+// Actually, if we hide bgSky, the ThreeBackground will be fully visible in the top 80% of the screen.
 
-    // Look ahead
-    let targetOffsetX = 0;
-    if (absVelX > 400) {
-       targetOffsetX = (cameraVelX > 0) ? 150 : -150;
-    }
-    this.cameras.main.setFollowOffset(
-       Phaser.Math.Linear(this.cameras.main.followOffset.x, targetOffsetX, 0.05),
-       Phaser.Math.Linear(this.cameras.main.followOffset.y, 0, 0.05)
-    );
-    
-    `;
+// 4. Boss spawn: wait, boss spawns at 970! Let's check mapCols.
+// If mapCols = 1000, 970 is mapCols - 30. Let's make it mapCols - 30 to be safe for any map size.
+content = content.replace('if (x === 970) {', 'if (x === mapCols - 30) {');
+// we also need to fix the boss placement coordinates inside the block
+// worldX + 300 might be wrong if worldX is x * blockSize.
+// Let's just leave worldX + 300 since x is mapCols - 30. It's fine.
 
-    c = c.substring(0, index1) + fixedContent + c.substring(index2);
-    fs.writeFileSync('src/game/PhaserGame.ts', c);
-    console.log("Successfully rebuilt the block!");
-} else {
-    console.log("Could not find anchors");
-}
+fs.writeFileSync(targetFile, content);
+console.log('Fixed wall, boss spawn, and bgSky transparency.');
