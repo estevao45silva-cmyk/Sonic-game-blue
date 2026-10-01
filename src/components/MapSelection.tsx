@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UISound } from '../utils/audio';
 
 interface MapSelectionProps {
   onSelect: (level: number) => void;
@@ -68,6 +69,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({ onSelect, onBack }) => {
   ];
 
   const handleSelect = (level: number) => {
+    UISound.play('click');
     setSelected(level);
     setTimeout(() => {
       onSelect(level);
@@ -101,6 +103,15 @@ const MapSelection: React.FC<MapSelectionProps> = ({ onSelect, onBack }) => {
           .map-card:hover {
             flex: 2.5;
             z-index: 10;
+          }
+          @media (max-width: 768px) {
+            .map-card {
+              border-right: none;
+              border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .map-card:last-child {
+              border-bottom: none;
+            }
           }
           .dimmed {
             filter: brightness(0.2) grayscale(100%) blur(4px);
@@ -156,8 +167,9 @@ const MapSelection: React.FC<MapSelectionProps> = ({ onSelect, onBack }) => {
             exit={{ y: -100, opacity: 0 }}
             transition={{ delay: 1, type: 'spring' }}
             whileHover={{ scale: 1.1, boxShadow: '0 0 20px rgba(255,255,255,0.8)' }}
+            onHoverStart={() => UISound.play('hover')}
             whileTap={{ scale: 0.9 }}
-            onClick={onBack}
+            onClick={() => { UISound.play('click'); onBack(); }}
             style={{ 
               position: 'absolute', top: '30px', left: '30px', zIndex: 100, 
               padding: '15px 30px', fontFamily: '"Press Start 2P", monospace', 
@@ -188,7 +200,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({ onSelect, onBack }) => {
         )}
       </AnimatePresence>
 
-      <div style={{ display: 'flex', width: '100%', height: '100%' }}>
+      <div className="responsive-flex">
         {maps.map((map, index) => {
           const isHovered = hovered === map.id;
           const isSelected = selected === map.id;
@@ -201,7 +213,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({ onSelect, onBack }) => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 60, damping: 15, delay: index * 0.1 }}
               onClick={() => !selected && handleSelect(map.id)}
-              onMouseEnter={() => !selected && setHovered(map.id)}
+              onMouseEnter={() => { if (!selected && hovered !== map.id) { setHovered(map.id); UISound.play('hover'); } }}
               onMouseLeave={() => !selected && setHovered(null)}
               className={`map-card ${isDimmed ? 'dimmed' : ''}`}
               style={{

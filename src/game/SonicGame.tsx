@@ -1,16 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import type { Character } from '../App';
-import { MainScene, UIScene } from './PhaserGame';
+import { MainScene, UIScene, RetroAudio } from './PhaserGame';
 import ThreeBackground from '../components/ThreeBackground';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VirtualJoystick } from '../components/VirtualJoystick';
 import { useVoiceCommands } from '../hooks/useVoiceCommands';
 import { generateTailsAdvice, speakText } from '../services/aiService';
+import { StoreOverlay } from '../components/StoreOverlay';
+import { BGMManager } from '../utils/audio';
 
 interface SonicGameProps {
   character: Character;
   level: number;
+  inventory?: any;
+  addGlobalRings?: (amount: number) => void;
   onLevelComplete: () => void;
   onBackToMenu: () => void;
 }
@@ -85,18 +89,96 @@ const GameOverOverlay = ({ onRestart, onMenu, triggerAdvice }: { onRestart: () =
   );
 };
 
-const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete, onBackToMenu }) => {
+const SonicGame: React.FC<SonicGameProps> = ({ character, level, inventory, addGlobalRings, onLevelComplete, onBackToMenu }) => {
   const gameRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
   const { isListening, transcript, toggleListening, isSupported } = useVoiceCommands();
   const [tailsAdvice, setTailsAdvice] = useState<string | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [rings, setRings] = useState(0);
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  
+  // Mission System
+  const [mission, setMission] = useState({ description: "Colete 20 Argolas", target: 20, reward: 50 });
+  const [missionCompleted, setMissionCompleted] = useState(false);
+
+  useEffect(() => {
+    BGMManager.playRandom();
+    const handleRings = (e: any) => setRings(e.detail);
+    window.addEventListener('sonic-rings', handleRings);
+    return () => {
+      window.removeEventListener('sonic-rings', handleRings);
+      BGMManager.stop();
+    };
+  }, []);
+
+  const addRings = (amount: number) => {
+    if (addGlobalRings) addGlobalRings(amount);
+  };
+
+  useEffect(() => {
+    if (rings >= mission.target && !missionCompleted && rings > 0) {
+      setMissionCompleted(true);
+      
+      const successMsg = `Missão Completa! +${mission.reward} Argolas na loja!`;
+      setTailsAdvice(successMsg);
+      // speakText(successMsg);
+      
+      addRings(mission.reward);
+      
+      setTimeout(() => {
+         setMission({ 
+           description: `Colete ${mission.target + 20} Argolas`, 
+           target: mission.target + 20, 
+           reward: mission.reward + 10 
+         });
+         setMissionCompleted(false);
+       }, 5000);
+    }
+  }, [rings, mission, missionCompleted]);
+
+  const handleBuyItem = (item: string, cost: number) => {
+    if (rings >= cost && phaserGameRef.current) {
+      const mainScene = phaserGameRef.current.scene.getScene('MainScene') as any;
+      if (mainScene) {
+        mainScene.ringCount -= cost;
+        mainScene.events.emit("updateRings", mainScene.ringCount);
+        window.dispatchEvent(new CustomEvent("sonic-rings", { detail: mainScene.ringCount }));
+        
+        if (item === 'life') {
+          mainScene.lives++;
+          mainScene.events.emit("updateLives", mainScene.lives);
+        } else if (item === 'shield') {
+          mainScene.currentShield = 'lightning'; 
+        } else if (item === 'speed') {
+          mainScene.speedShoesTimer = 10000;
+        } else if (item === 'invincible') {
+          mainScene.isInvincible = true;
+          mainScene.time.delayedCall(10000, () => { mainScene.isInvincible = false; });
+        }
+      }
+    }
+  };
+
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    
+    setTailsAdvice("Pensando...");
+    const playerState = { rings, speed: 0, context: `Responda a essa mensagem do jogador de forma curta, prestativa e amigável, no universo do Sonic: "${chatInput}"` };
+    const advice = await generateTailsAdvice(playerState);
+    setTailsAdvice(advice);
+    // speakText(advice);
+    setChatInput('');
+    setTimeout(() => setTailsAdvice(null), 8000);
+  };
 
   const getAdvice = async () => {
     const playerState = { rings: Math.floor(Math.random() * 50), speed: Math.random() * 100 };
     const advice = await generateTailsAdvice(playerState);
     setTailsAdvice(advice);
-    speakText(advice);
+    // speakText(advice);
     setTimeout(() => setTailsAdvice(null), 4000);
   };
 
@@ -107,7 +189,7 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
   const handleGameOverAdvice = async () => {
      const advice = await generateTailsAdvice({ rings: 0, speed: 0, context: "O jogador acabou de perder todas as vidas e deu Game Over! Fale algo dramático estilo fliperama!" } as any);
      setTailsAdvice(advice);
-     speakText(advice);
+     // speakText(advice);
      setTimeout(() => setTailsAdvice(null), 6000);
   };
 
@@ -120,11 +202,19 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
       const onAiTrigger = async (data: { context: string }) => {
          const advice = await generateTailsAdvice({ rings: 0, speed: 0, context: data.context } as any);
          setTailsAdvice(advice);
-         speakText(advice);
+         // speakText(advice);
          setTimeout(() => setTailsAdvice(null), 4000);
       };
 
-      phaserGameRef.current.scene.start('MainScene', { character, level, onLevelComplete, onBackToMenu, onAiTrigger, onGameOver: handleGameOver });
+      const handleLevelEnd = () => {
+        onLevelComplete();
+      };
+
+      const handleMenuReturn = () => {
+        onBackToMenu();
+      };
+
+      phaserGameRef.current.scene.start('MainScene', { character, level, inventory, onLevelComplete: handleLevelEnd, onBackToMenu: handleMenuReturn, onAiTrigger, onGameOver: handleGameOver });
     }
   };
 
@@ -156,11 +246,19 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
     const onAiTrigger = async (data: { context: string }) => {
        const advice = await generateTailsAdvice({ rings: 0, speed: 0, context: data.context } as any);
        setTailsAdvice(advice);
-       speakText(advice);
+       // speakText(advice);
        setTimeout(() => setTailsAdvice(null), 4000);
     };
 
-    game.scene.start('MainScene', { character, level, onLevelComplete, onBackToMenu, onAiTrigger, onGameOver: handleGameOver });
+    const handleLevelEnd = () => {
+      onLevelComplete();
+    };
+
+    const handleMenuReturn = () => {
+      onBackToMenu();
+    };
+
+    game.scene.start('MainScene', { character, level, inventory, onLevelComplete: handleLevelEnd, onBackToMenu: handleMenuReturn, onAiTrigger, onGameOver: handleGameOver });
 
     const handleResize = () => {
       if (game) game.scale.resize(window.innerWidth, window.innerHeight);
@@ -170,6 +268,7 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      RetroAudio.stopBGM();
       if (game) game.destroy(true);
     };
   }, [character, level]);
@@ -191,53 +290,27 @@ const SonicGame: React.FC<SonicGameProps> = ({ character, level, onLevelComplete
         )}
       </AnimatePresence>
 
-      {!isGameOver && <VirtualJoystick character={character} />}
+      {/* Virtual Joystick removido a pedido do usuário */}
 
-      {/* Voice Controls UI */}
-      {isSupported && !isGameOver && (
-        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 100, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <button 
-            onClick={toggleListening}
-            style={{ 
-              padding: '10px 20px', 
-              borderRadius: '50px', 
-              border: 'none', 
-              backgroundColor: isListening ? '#ff4444' : '#ffffff', 
-              color: isListening ? '#ffffff' : '#000000',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              fontFamily: 'Orbitron, sans-serif'
-            }}
-          >
-            🎤 {isListening ? 'Ouvindo... (fale "Pula" ou "Acelera")' : 'Ativar Controle por Voz'}
-          </button>
-          
-          <button 
-            onClick={getAdvice}
-            style={{ 
-              padding: '10px 20px', 
-              borderRadius: '50px', 
-              border: 'none', 
-              backgroundColor: '#ffa500', 
-              color: '#000000',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
-              fontFamily: 'Orbitron, sans-serif'
-            }}
-          >
-            🦊 Chamar Tails (I.A.)
-          </button>
-          
-          {transcript && isListening && (
-            <div style={{ color: 'white', backgroundColor: 'rgba(0,0,0,0.5)', padding: '5px 10px', borderRadius: '10px' }}>
-              🗣️ "{transcript}"
-            </div>
-          )}
+      {/* Mission UI Bubble */}
+      {!isGameOver && (
+        <div style={{
+          position: 'absolute', top: 75, right: 20, zIndex: 100,
+          backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px', borderRadius: '10px',
+          border: '2px solid #FFD700', color: 'white', fontFamily: '"Press Start 2P", Orbitron, sans-serif',
+          textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '5px'
+        }}>
+          <div style={{ color: '#FFD700', fontSize: '9px' }}>MISSÃO ATUAL:</div>
+          <div style={{ fontSize: '10px' }}>{mission.description}</div>
+          <div style={{ fontSize: '9px', color: '#4CAF50' }}>Progresso: {rings}/{mission.target}</div>
+          <div style={{ fontSize: '9px', color: '#ffa500' }}>Recompensa: {mission.reward} Argolas</div>
+        </div>
+      )}
+
+      {/* Voice Controls & AI removed from here, moving to Title Screen */}
+      {isSupported && !isGameOver && transcript && isListening && (
+        <div style={{ position: 'absolute', bottom: 20, left: 20, zIndex: 100, color: 'white', backgroundColor: 'rgba(0,0,0,0.5)', padding: '5px 10px', borderRadius: '10px' }}>
+          🗣️ "{transcript}"
         </div>
       )}
 

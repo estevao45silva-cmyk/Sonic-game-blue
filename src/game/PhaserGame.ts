@@ -254,7 +254,7 @@ export class MainScene extends Phaser.Scene {
 
   private hasPerformedAirAction: boolean = false;
 
-  private hasDoubleJumped: boolean = false;
+  private jumpCount: number = 0;
 
   private isDropDashing: boolean = false;
 
@@ -265,6 +265,7 @@ export class MainScene extends Phaser.Scene {
   private speedShoesTimer: number = 0;
 
   private currentShield: "none" | "fire" | "water" | "lightning" = "none";
+  private inventory: any = null;
 
   private shieldGraphic!: Phaser.GameObjects.Arc;
 
@@ -286,6 +287,10 @@ export class MainScene extends Phaser.Scene {
   private readonly PLAYER_SCALE = 0.5;
 
   private currentFlipX: boolean = false;
+
+  // Easter Eggs
+  private afkTimer: number = 0;
+  private afkTriggered: boolean = false;
 
   private currentGif: string = "";
 
@@ -312,6 +317,7 @@ export class MainScene extends Phaser.Scene {
   init(data: {
     character: Character;
     level: number;
+    inventory?: any;
     onLevelComplete?: () => void;
     onBackToMenu?: () => void;
     checkpoint?: { x: number; y: number };
@@ -331,7 +337,12 @@ export class MainScene extends Phaser.Scene {
 
     this.lastCheckpoint = data.checkpoint || null;
 
-    this.lives = data.lives !== undefined ? data.lives : 3;
+    if (data.inventory) {
+       this.inventory = data.inventory;
+       this.lives = data.inventory.lives !== undefined ? data.inventory.lives : 3;
+    } else {
+       this.lives = data.lives !== undefined ? data.lives : 3;
+    }
 
     this.currentState = PlayerState.IDLE;
 
@@ -344,6 +355,7 @@ export class MainScene extends Phaser.Scene {
     this.load.image("sonic_sprite", "/imagens/sonic%20correndo.gif");
 
     this.load.image("shadow_sprite", "/imagens/shadow%20correndo.gif");
+    this.load.image("tails_sprite", "/imagens/dg96skq-28d97178-f8c8-455d-aa3f-ff258fb295da.gif");
 
     // User Sprites
 
@@ -377,22 +389,11 @@ export class MainScene extends Phaser.Scene {
   }
 
   private generateProceduralGraphics() {
-    const keys = [
-      "goal_ph",
-      "monitor_ph",
-      "ring_ph",
-      "spike_ph",
-      "loop_trigger_ph",
-      "dust_ph",
-      "explosion_ph",
-      "checkpoint_ph",
-      "breakable_ph",
-      "boss_ph",
-      "spring_ph",
-    ];
-
+    const keys = this.textures.getTextureKeys();
     keys.forEach((k) => {
-      if (this.textures.exists(k)) this.textures.remove(k);
+      if (k.endsWith("_ph") || k.startsWith("checker_") || k.startsWith("bg_") || k === "cloud_ph" || k.startsWith("shield_") || k === "palm_tree_ph" || k === "sunflower_ph" || k === "water_anim_ph") {
+        if (this.textures.exists(k)) this.textures.remove(k);
+      }
     });
 
     const graphics = this.add.graphics();
@@ -531,19 +532,43 @@ export class MainScene extends Phaser.Scene {
 
     graphics.clear();
 
-    // Spring
-
-    graphics.fillStyle(0xff0000, 1);
-
-    graphics.fillRect(0, 32, 64, 32);
-
-    graphics.fillStyle(0xaaaaaa, 1);
-
-    graphics.fillRect(16, 16, 32, 16);
-
-    graphics.generateTexture("spring_ph", 64, 64);
-
-    graphics.clear();
+    // Beautiful Spring Graphic
+    const springCanvas = document.createElement("canvas");
+    springCanvas.width = 64;
+    springCanvas.height = 64;
+    const sCtx = springCanvas.getContext("2d");
+    if (sCtx) {
+      // Base
+      sCtx.fillStyle = "#333";
+      sCtx.fillRect(10, 48, 44, 16);
+      sCtx.fillStyle = "#555";
+      sCtx.fillRect(12, 50, 40, 12);
+      
+      // Coils
+      sCtx.strokeStyle = "#95a5a6";
+      sCtx.lineWidth = 6;
+      sCtx.lineCap = "round";
+      sCtx.beginPath();
+      sCtx.moveTo(20, 48); sCtx.lineTo(44, 38);
+      sCtx.lineTo(20, 28); sCtx.lineTo(44, 18);
+      sCtx.stroke();
+      
+      // Top Pad
+      sCtx.fillStyle = "#e74c3c"; // Red
+      sCtx.beginPath();
+      if (sCtx.roundRect) {
+         sCtx.roundRect(10, 8, 44, 14, 6);
+      } else {
+         sCtx.fillRect(10, 8, 44, 14);
+      }
+      sCtx.fill();
+      
+      // Yellow Star/Highlight
+      sCtx.fillStyle = "#f1c40f";
+      sCtx.fillRect(30, 10, 4, 10);
+      sCtx.fillRect(27, 13, 10, 4);
+    }
+    this.textures.addCanvas("spring_ph", springCanvas);
 
     // Cloud
 
@@ -631,44 +656,134 @@ export class MainScene extends Phaser.Scene {
 
     this.textures.addCanvas("bg_clouds_ph", cloudCanvas);
 
-    // Pixel Perfect Green Hill Checkerboard
-
-    const tileCanvas = document.createElement("canvas");
-
-    tileCanvas.width = 64;
-    tileCanvas.height = 64;
-
-    const tCtx = tileCanvas.getContext("2d");
-
-    if (tCtx) {
-      // Dirt base
-
-      tCtx.fillStyle = "#6E3A07";
-
-      tCtx.fillRect(0, 0, 64, 64);
-
-      // Checker pattern (Orange)
-
-      tCtx.fillStyle = "#D97726";
-
-      tCtx.fillRect(0, 16, 32, 24);
-
-      tCtx.fillRect(32, 40, 32, 24);
-
-      // Grass top (Green)
-
-      tCtx.fillStyle = "#10B981";
-
-      tCtx.fillRect(0, 0, 64, 16);
-
-      // Grass dark shadow
-
-      tCtx.fillStyle = "#064E3B";
-
-      tCtx.fillRect(0, 12, 64, 4);
+    // ==========================================
+    // 1. TILE: GREEN HILL (Beautiful Grass & Dirt)
+    // ==========================================
+    const tileCanvas1 = document.createElement("canvas");
+    tileCanvas1.width = 64; tileCanvas1.height = 64;
+    const ctx1 = tileCanvas1.getContext("2d");
+    if (ctx1) {
+      ctx1.fillStyle = "#5c3a21"; // Rich dark dirt
+      ctx1.fillRect(0, 0, 64, 64);
+      // Dirt details (little rocks)
+      ctx1.fillStyle = "#4a2d18";
+      ctx1.beginPath(); ctx1.arc(15, 30, 4, 0, Math.PI * 2); ctx1.fill();
+      ctx1.beginPath(); ctx1.arc(45, 50, 3, 0, Math.PI * 2); ctx1.fill();
+      ctx1.beginPath(); ctx1.arc(30, 40, 5, 0, Math.PI * 2); ctx1.fill();
+      
+      // Beautiful green grass top layer
+      const gradGrass = ctx1.createLinearGradient(0, 0, 0, 16);
+      gradGrass.addColorStop(0, "#2ecc71");
+      gradGrass.addColorStop(1, "#27ae60");
+      ctx1.fillStyle = gradGrass;
+      ctx1.fillRect(0, 0, 64, 16);
+      
+      // Grass shadow transition
+      ctx1.fillStyle = "#1e8449";
+      ctx1.fillRect(0, 16, 64, 4);
     }
+    this.textures.addCanvas("checker_perfect_1", tileCanvas1);
 
-    this.textures.addCanvas("checker_perfect_1", tileCanvas);
+    // ==========================================
+    // 2. TILE: MARBLE ZONE (Ancient Runic Ruins)
+    // ==========================================
+    const tileCanvas2 = document.createElement("canvas");
+    tileCanvas2.width = 64; tileCanvas2.height = 64;
+    const ctx2 = tileCanvas2.getContext("2d");
+    if (ctx2) {
+      ctx2.fillStyle = "#2c3e50"; // Dark blue stone
+      ctx2.fillRect(0, 0, 64, 64);
+      // Stone blocks borders
+      ctx2.strokeStyle = "#1a252f";
+      ctx2.lineWidth = 4;
+      ctx2.strokeRect(0, 0, 64, 64);
+      ctx2.strokeRect(4, 4, 56, 56);
+      
+      // Glowing purple runes
+      ctx2.fillStyle = "#9b59b6";
+      ctx2.shadowColor = "#8e44ad";
+      ctx2.shadowBlur = 10;
+      ctx2.font = "bold 20px monospace";
+      ctx2.fillText("⚡", 20, 40);
+      ctx2.shadowBlur = 0;
+    }
+    this.textures.addCanvas("checker_starlight", tileCanvas2); // Repurposing old key for now, we will fix assignment later
+
+    // ==========================================
+    // 3. TILE: STAR LIGHT (Futuristic Neon Metal)
+    // ==========================================
+    const tileCanvas3 = document.createElement("canvas");
+    tileCanvas3.width = 64; tileCanvas3.height = 64;
+    const ctx3 = tileCanvas3.getContext("2d");
+    if (ctx3) {
+      const gradMetal = ctx3.createLinearGradient(0, 0, 64, 64);
+      gradMetal.addColorStop(0, "#7f8c8d");
+      gradMetal.addColorStop(1, "#34495e");
+      ctx3.fillStyle = gradMetal;
+      ctx3.fillRect(0, 0, 64, 64);
+      
+      // Steel bolts
+      ctx3.fillStyle = "#bdc3c7";
+      ctx3.beginPath(); ctx3.arc(10, 10, 3, 0, Math.PI * 2); ctx3.fill();
+      ctx3.beginPath(); ctx3.arc(54, 10, 3, 0, Math.PI * 2); ctx3.fill();
+      ctx3.beginPath(); ctx3.arc(10, 54, 3, 0, Math.PI * 2); ctx3.fill();
+      ctx3.beginPath(); ctx3.arc(54, 54, 3, 0, Math.PI * 2); ctx3.fill();
+      
+      // Neon blue glowing stripe
+      ctx3.fillStyle = "#00ffff";
+      ctx3.shadowColor = "#00ffff";
+      ctx3.shadowBlur = 15;
+      ctx3.fillRect(0, 28, 64, 8);
+      ctx3.shadowBlur = 0;
+    }
+    this.textures.addCanvas("checker_starlight_real", tileCanvas3);
+
+    // ==========================================
+    // 4. TILE: CASINO (Flashing Neon Dancefloor)
+    // ==========================================
+    const tileCanvas4 = document.createElement("canvas");
+    tileCanvas4.width = 64; tileCanvas4.height = 64;
+    const ctx4 = tileCanvas4.getContext("2d");
+    if (ctx4) {
+      ctx4.fillStyle = "#111"; // Black plastic
+      ctx4.fillRect(0, 0, 64, 64);
+      
+      // Neon pink/cyan tiles
+      ctx4.fillStyle = "#ff00ff";
+      ctx4.shadowColor = "#ff00ff";
+      ctx4.shadowBlur = 10;
+      ctx4.fillRect(4, 4, 26, 26);
+      
+      ctx4.fillStyle = "#00ffff";
+      ctx4.shadowColor = "#00ffff";
+      ctx4.shadowBlur = 10;
+      ctx4.fillRect(34, 34, 26, 26);
+      ctx4.shadowBlur = 0;
+    }
+    this.textures.addCanvas("checker_casino", tileCanvas4);
+
+    // ==========================================
+    // 5. TILE: VOLCANO (Obsidian Magma)
+    // ==========================================
+    const tileCanvas5 = document.createElement("canvas");
+    tileCanvas5.width = 64; tileCanvas5.height = 64;
+    const ctx5 = tileCanvas5.getContext("2d");
+    if (ctx5) {
+      ctx5.fillStyle = "#1a0b0b"; // Pitch black obsidian
+      ctx5.fillRect(0, 0, 64, 64);
+      
+      // Lava cracks
+      ctx5.strokeStyle = "#ff3300";
+      ctx5.shadowColor = "#ff0000";
+      ctx5.shadowBlur = 15;
+      ctx5.lineWidth = 3;
+      ctx5.beginPath();
+      ctx5.moveTo(0, 20); ctx5.lineTo(30, 30); ctx5.lineTo(40, 64);
+      ctx5.moveTo(64, 10); ctx5.lineTo(30, 30);
+      ctx5.stroke();
+      ctx5.shadowBlur = 0;
+    }
+    this.textures.addCanvas("checker_volcano", tileCanvas5);
 
     // Pixel Perfect Palm Tree
 
@@ -744,42 +859,42 @@ export class MainScene extends Phaser.Scene {
     sunCanvas.width = 60;
     sunCanvas.height = 80;
 
-    const sCtx = sunCanvas.getContext("2d");
+    const sunCtx = sunCanvas.getContext("2d");
 
-    if (sCtx) {
+    if (sunCtx) {
       // Stem
 
-      sCtx.fillStyle = "#228B22";
+      sunCtx.fillStyle = "#228B22";
 
-      sCtx.fillRect(26, 30, 8, 50);
+      sunCtx.fillRect(26, 30, 8, 50);
 
       // Leaves
 
-      sCtx.fillRect(10, 50, 16, 6);
+      sunCtx.fillRect(10, 50, 16, 6);
 
-      sCtx.fillRect(34, 60, 16, 6);
+      sunCtx.fillRect(34, 60, 16, 6);
 
       // Petals
 
-      sCtx.fillStyle = "#FFD700";
+      sunCtx.fillStyle = "#FFD700";
 
-      sCtx.beginPath();
-      sCtx.arc(30, 30, 24, 0, Math.PI * 2);
-      sCtx.fill();
+      sunCtx.beginPath();
+      sunCtx.arc(30, 30, 24, 0, Math.PI * 2);
+      sunCtx.fill();
 
-      sCtx.fillStyle = "#FFA500"; // Petal shadow
+      sunCtx.fillStyle = "#FFA500"; // Petal shadow
 
-      sCtx.beginPath();
-      sCtx.arc(30, 30, 18, 0, Math.PI * 2);
-      sCtx.fill();
+      sunCtx.beginPath();
+      sunCtx.arc(30, 30, 18, 0, Math.PI * 2);
+      sunCtx.fill();
 
       // Center
 
-      sCtx.fillStyle = "#FF69B4"; // Pink center
+      sunCtx.fillStyle = "#FF69B4"; // Pink center
 
-      sCtx.beginPath();
-      sCtx.arc(30, 30, 12, 0, Math.PI * 2);
-      sCtx.fill();
+      sunCtx.beginPath();
+      sunCtx.arc(30, 30, 12, 0, Math.PI * 2);
+      sunCtx.fill();
     }
 
     this.textures.addCanvas("sunflower_ph", sunCanvas);
@@ -959,19 +1074,7 @@ export class MainScene extends Phaser.Scene {
 
     const horizonY = 1000;
 
-    // Parallax Clouds (Infinite)
-
-    this.bgClouds = this.add.tileSprite(
-      0,
-      horizonY - 400,
-      28000,
-      150,
-      "bg_clouds_ph",
-    );
-
-    this.bgClouds.setOrigin(0, 0);
-
-    this.bgClouds.setScrollFactor(0.1, 0.05);
+    // Parallax Clouds Removed (Nuvens abaixo do mapa removidas)
 
     // Parallax Far Mountains (Infinite)
 
@@ -1178,7 +1281,8 @@ export class MainScene extends Phaser.Scene {
     const startY = this.lastCheckpoint ? this.lastCheckpoint.y : 800;
 
     const textureKey =
-      this.characterChoice === "sonic" ? "sonic_sprite" : "shadow_sprite";
+      this.characterChoice === "sonic" ? "sonic_sprite" :
+      this.characterChoice === "tails" ? "tails_sprite" : "shadow_sprite";
 
     this.player = this.physics.add.sprite(
       startX,
@@ -1221,20 +1325,44 @@ export class MainScene extends Phaser.Scene {
     this.player.setGravityY(this.GRAVITY);
     this.player.body.debugShowVelocity = false;
 
+    // ==== CONSUME INVENTORY ====
+    if (this.inventory) {
+      if (this.inventory.shield) {
+         this.currentShield = 'lightning';
+         this.events.emit('updateRings', this.ringCount); // Trigger UI update if needed
+      }
+      if (this.inventory.speed) {
+         this.speedShoesTimer = 10000;
+         RetroAudio.playBGM(2); // Speed up music
+      }
+      if (this.inventory.invincible) {
+         this.isInvincible = true;
+         this.time.delayedCall(10000, () => {
+             this.isInvincible = false;
+         });
+      }
+      // Vidas já foram carregadas no init() e estão em this.lives
+    }
+    // ===========================
+
     // THE GIF DOM ELEMENT
 
     const gifFile =
       this.characterChoice === "sonic"
         ? "sonic%20correndo.gif"
+        : this.characterChoice === "tails"
+        ? "dg96skq-28d97178-f8c8-455d-aa3f-ff258fb295da.gif"
         : "shadow%20correndo.gif";
 
     this.currentGif = gifFile;
+
+    const baseSize = this.characterChoice === "shadow" ? "170px" : "150px";
 
     this.playerGif = this.add.dom(
       startX,
       startY,
       "img",
-      "width: 150px; height: 150px; object-fit: contain; pointer-events: none;",
+      `width: ${baseSize}; height: ${baseSize}; object-fit: contain; pointer-events: none;`,
     );
 
     (this.playerGif.node as HTMLImageElement).src = `/imagens/${gifFile}`;
@@ -1426,7 +1554,21 @@ export class MainScene extends Phaser.Scene {
 
     RetroAudio.playBGM(this.currentLevel);
 
+    if (this.inventory) {
+      if (this.inventory.shield) {
+        this.currentShield = 'lightning';
+      }
+      if (this.inventory.speed) {
+        this.speedShoesTimer = 10000;
+      }
+      if (this.inventory.invincible) {
+        this.isInvincible = true;
+        this.time.delayedCall(10000, () => { this.isInvincible = false; });
+      }
+    }
+
     this.events.emit("updateRings", this.ringCount);
+    window.dispatchEvent(new CustomEvent("sonic-rings", { detail: this.ringCount }));
   }
 
   private createMassiveLevel() {
@@ -1447,10 +1589,10 @@ export class MainScene extends Phaser.Scene {
 
       let tileKey = "checker_perfect_1";
 
-      if (this.currentLevel === 2) tileKey = "checker_starlight";
-      if (this.currentLevel === 3) tileKey = "checker_starlight";
-      if (this.currentLevel === 4) tileKey = "checker_starlight";
-      if (this.currentLevel === 5) tileKey = "checker_marble";
+      if (this.currentLevel === 2) tileKey = "checker_starlight"; // This is actually Marble Zone ruins now
+      if (this.currentLevel === 3) tileKey = "checker_starlight_real"; // Star Light futuristic
+      if (this.currentLevel === 4) tileKey = "checker_casino";
+      if (this.currentLevel === 5) tileKey = "checker_volcano";
 
       let isInsideLoop = x >= lastLoopX - 1 && x <= lastLoopX + 8;
 
@@ -1547,8 +1689,11 @@ export class MainScene extends Phaser.Scene {
             if (timeBonus < 0) timeBonus = 0;
 
             let ringBonus = this.ringCount * 100;
+            
+            // Fases finais multiplicam o score
+            let levelMultiplier = this.currentLevel;
 
-            this.score += timeBonus + ringBonus;
+            this.score += (timeBonus + ringBonus) * levelMultiplier;
 
             this.events.emit("updateScore", this.score);
 
@@ -1607,114 +1752,50 @@ export class MainScene extends Phaser.Scene {
         continue;
       }
 
-      // LEVEL 1: GREEN HILL
-
+      // LEVEL 1: GREEN HILL (Básico, foco em velocidade, menos inimigos)
       if (this.currentLevel === 1) {
-        if (x % 80 > 75) continue; // Gap imenso reduzido para ocorrer a cada 80 blocos
+        if (x % 100 > 95) continue; // Gaps raros e curtos
 
-        const plat = this.add.tileSprite(
-          worldX + 32,
-          groundY + 32,
-          blockSize,
-          blockSize,
-          tileKey,
-        );
-
+        const plat = this.add.tileSprite(worldX + 32, groundY + 32, blockSize, blockSize, tileKey);
         this.physics.add.existing(plat, true);
-
         this.platforms.add(plat as unknown as Phaser.Physics.Arcade.Image);
 
         // Rota Superior (Upper Layer)
+        const hasUpperLayer = x % 150 >= 30 && x % 150 <= 70;
 
-        const hasUpperLayer = x % 80 >= 10 && x % 80 <= 70;
+        // Mola para alcançar a Rota Superior
+        if (x % 150 === 28 && !hasObject) {
+           this.springs.create(worldX + 32, groundY - 32, "spring_ph");
+           hasObject = true;
+        }
 
         if (hasUpperLayer) {
-          const upperY = groundY - 500;
+          const upperY = groundY - 400;
+          const upperPlat = this.add.tileSprite(worldX + 32, upperY + 32, blockSize, blockSize, tileKey);
+          this.physics.add.existing(upperPlat, true);
+          this.platforms.add(upperPlat as unknown as Phaser.Physics.Arcade.Image);
 
-          const isHole = (x % 80 >= 9 && x % 80 <= 11) || // Buraco do elevador
-                         (x % 80 >= 34 && x % 80 <= 39) || // Buraco da escada
-                         (x % 80 >= 59 && x % 80 <= 61);   // Buraco da mola
-
-          if (!isHole) {
-            const upperPlat = this.add.tileSprite(
-              worldX + 32,
-              upperY + 32,
-              blockSize,
-              blockSize,
-              tileKey,
-            );
-
-            this.physics.add.existing(upperPlat, true);
-
-            this.platforms.add(
-              upperPlat as unknown as Phaser.Physics.Arcade.Image,
-            );
-          }
-
-          // Rings na Rota Superior
-
-          if (x % 2 === 0) {
+          if (x % 3 === 0) {
             this.rings.create(worldX + 32, upperY - 64, "ring_ph");
           }
-
-          // Formas estratégicas de subir
-          if (x % 80 === 10 && !hasObject) {
-            // Elevador Vertical
-            const mPlat = this.movingPlatforms.create(worldX + 32, groundY - 120, tileKey);
-            mPlat.body.allowGravity = false;
-            mPlat.setImmovable(true);
-            (mPlat as any).isVertical = true;
-            (mPlat as any).startY = groundY - 250;
-            (mPlat as any).range = 250;
-            mPlat.setVelocityY(-150);
-            hasObject = true;
-          } else if (x % 80 >= 35 && x % 80 <= 38) {
-            // Escadas flutuantes (Começam bem altas para não bloquear a corrida no chão)
-            const stepHeight = (x % 80 - 34) * 100 + 160; // 260, 360, 460, 560
-            const stepPlat = this.add.tileSprite(worldX + 32, groundY - stepHeight, blockSize, blockSize, tileKey);
-            this.physics.add.existing(stepPlat, true);
-            this.platforms.add(stepPlat as unknown as Phaser.Physics.Arcade.Image);
-            hasObject = true;
-          } else if (x % 80 === 60 && !hasObject) {
-            // Mola estratégica para um último impulso
-            this.springs.create(worldX + 32, groundY - 32, "spring_ph");
-            hasObject = true;
+        } else {
+          // Rings no chão normal
+          if (x % 20 === 0 && !hasObject) {
+            for(let r=0; r<3; r++) this.rings.create(worldX + 32 + (r*32), groundY - 64, "ring_ph");
           }
         }
 
-        if (x > 0 && x % 40 === 15) {
+        // Loop 360 estrategicamente posicionado logo após a rota superior
+        if (x > 0 && x % 150 === 110) {
           this.createLoopVisual(worldX, groundY);
-
           lastLoopX = x;
-
           hasObject = true;
         }
 
-        if (x % 38 === 0 && !hasObject) {
-          const enemy = this.enemies.create(
-            worldX + 32,
-            groundY - 64,
-            "enemy_ph",
-          );
-
-          enemy.setScale(0.128);
-
-          enemy.body.allowGravity = true;
-
-          (enemy as any).startX = worldX + 32;
-
-          hasObject = true;
-        }
-
-        if (x % 20 === 0 && !hasObject && !hasUpperLayer) {
-          this.springs.create(worldX + 32, groundY - 32, "spring_ph");
-
-          hasObject = true;
-        }
-
-        if (x % 50 === 0 && !hasObject && !hasUpperLayer) {
-          this.spikes.create(worldX + 32, groundY - 32, "spike_ph");
-
+        // Poucos inimigos (espaçados de forma justa)
+        if (x % 150 === 85 && !hasObject && x > 20) {
+          const enemy = this.enemies.create(worldX + 32, groundY - 64, "enemy_ph");
+          enemy.setScale(0.128); enemy.body.allowGravity = true; (enemy as any).startX = worldX + 32;
           hasObject = true;
         }
       }
@@ -1722,7 +1803,7 @@ export class MainScene extends Phaser.Scene {
       // LEVEL 2: NEON DREAMSCAPE (REVISED - MUCH EASIER AND FUN!)
       else if (this.currentLevel === 2) {
         // More varied terrain, mostly safe but with small gaps for excitement
-        const isGap = x % 60 >= 55 && x % 60 <= 58; // Small gaps
+        const isGap = x % 150 >= 140 && x % 150 <= 145; // Small gaps
         
         if (!isGap) {
             const plat = this.add.tileSprite(worldX + 32, groundY + 32, blockSize, blockSize, tileKey);
@@ -1730,20 +1811,25 @@ export class MainScene extends Phaser.Scene {
             this.physics.add.existing(plat, true);
             this.platforms.add(plat as unknown as Phaser.Physics.Arcade.Image);
         } else {
-            // Floating neon bridges over gaps
-            const bridge = this.add.tileSprite(worldX + 32, groundY + 32, blockSize, blockSize / 2, tileKey);
-            bridge.setTint(0x00ffff); // Cyan glowing bridge
-            bridge.setAlpha(0.8);
-            this.physics.add.existing(bridge, true);
-            this.platforms.add(bridge as unknown as Phaser.Physics.Arcade.Image);
+            // Piscinas de Água profundas!
+            const water = this.waterPools.create(worldX + 32, groundY + 32, "water_ph");
+            water.setDisplaySize(blockSize, blockSize);
+            water.body.setSize(blockSize, blockSize);
+            water.setAlpha(0.6);
+            water.setTint(0x00ffff); // Neon water
             
-            // Rings over the bridge
+            // Chao seguro bem fundo debaixo da agua
+            const deepFloor = this.add.tileSprite(worldX + 32, groundY + 300, blockSize, blockSize, tileKey);
+            this.physics.add.existing(deepFloor, true);
+            this.platforms.add(deepFloor as unknown as Phaser.Physics.Arcade.Image);
+            
+            // Rings over the water
             this.rings.create(worldX + 32, groundY - 64, "ring_ph");
         }
 
         // Floating glowing platforms in a stair pattern
-        if (x % 40 >= 10 && x % 40 <= 20) {
-           const stairY = groundY - 150 - ((x % 40) - 10) * 15; 
+        if (x % 100 >= 30 && x % 100 <= 40) {
+           const stairY = groundY - 150 - ((x % 100) - 30) * 15; 
            const upperPlat = this.add.tileSprite(worldX + 32, stairY, blockSize, blockSize / 2, tileKey);
            upperPlat.setTint(0xffd700); // Gold glowing platforms
            this.physics.add.existing(upperPlat, true);
@@ -1754,21 +1840,21 @@ export class MainScene extends Phaser.Scene {
         }
 
         // Cool visual arcs of rings
-        if (x % 50 === 0 && !hasObject && !isGap) {
+        if (x % 80 === 0 && !hasObject && !isGap) {
             for(let r = 0; r < 5; r++) {
                this.rings.create(worldX + 32 + (r * 40), groundY - 100 - Math.sin(r * 0.8) * 80, "ring_ph");
             }
         }
 
         // Mega jump springs
-        if (x % 70 === 35 && !hasObject && !isGap) {
+        if (x % 150 === 75 && !hasObject && !isGap) {
           const jumpSpring = this.springs.create(worldX + 32, groundY - 32, "spring_ph");
           jumpSpring.setTint(0x00ff00);
           hasObject = true;
         }
 
         // Reduced enemies, placed safely away from jumps
-        if (x % 90 === 45 && !hasObject && !isGap) {
+        if (x % 200 === 100 && !hasObject && !isGap) {
           const enemy = this.enemies.create(worldX + 32, groundY - 64, "enemy_ph");
           enemy.setScale(0.128);
           enemy.body.allowGravity = true;
@@ -1798,86 +1884,73 @@ export class MainScene extends Phaser.Scene {
         }
       }
 
-      // LEVEL 3: STAR LIGHT
+      // LEVEL 3: STAR LIGHT (Peculiaridade: Muitas Molas e Inimigos Voadores)
       else if (this.currentLevel === 3) {
-        if (x % 100 > 95) continue; // Gap raro
+        if (x % 100 > 93) continue; // Mais buracos
+
         const plat = this.add.tileSprite(worldX + 32, groundY + 32, blockSize, blockSize, tileKey);
         this.physics.add.existing(plat, true);
         this.platforms.add(plat as unknown as Phaser.Physics.Arcade.Image);
 
-        // Very high vertical paths
-        const hasUpperLayer = x % 100 >= 15 && x % 100 <= 85;
-        if (hasUpperLayer) {
-          const upperY = groundY - 600;
-          const upperPlat = this.add.tileSprite(worldX + 32, upperY + 32, blockSize, blockSize, tileKey);
-          this.physics.add.existing(upperPlat, true);
-          this.platforms.add(upperPlat as unknown as Phaser.Physics.Arcade.Image);
-          if (x % 2 === 0) this.rings.create(worldX + 32, upperY - 64, "ring_ph");
-
-          // Elevators
-          if (x % 100 === 15 && !hasObject) {
-            const mPlat = this.movingPlatforms.create(worldX + 32, groundY - 120, tileKey);
-            mPlat.body.allowGravity = false;
-            mPlat.setImmovable(true);
-            (mPlat as any).isVertical = true;
-            (mPlat as any).startY = groundY - 300;
-            (mPlat as any).range = 300;
-            mPlat.setVelocityY(-300);
-            hasObject = true;
-          } else if (x % 100 === 75 && !hasObject) {
-            this.springs.create(worldX + 32, groundY - 32, "spring_ph");
-            hasObject = true;
-          }
+        // Plataformas flutuantes em escada
+        if (x % 60 >= 10 && x % 60 <= 15) {
+           const upperY = groundY - 200 - ((x%60)*15);
+           const upperPlat = this.add.tileSprite(worldX + 32, upperY, blockSize, blockSize, tileKey);
+           this.physics.add.existing(upperPlat, true);
+           this.platforms.add(upperPlat as unknown as Phaser.Physics.Arcade.Image);
         }
-        if (x > 0 && x % 50 === 25) {
+
+        if (x > 0 && x % 120 === 60) {
           this.createLoopVisual(worldX, groundY);
           lastLoopX = x;
           hasObject = true;
         }
-        if (x % 40 === 0 && !hasObject) {
-          const flyer = this.flyingEnemies.create(worldX + 32, groundY - 200, "enemy_ph");
+
+        if (x % 90 === 0 && !hasObject) {
+          // Inimigos Aéreos!
+          const flyer = this.flyingEnemies.create(worldX + 32, groundY - 250, "enemy_ph");
           flyer.setScale(0.128); flyer.body.allowGravity = false;
-          (flyer as any).startX = worldX + 32; (flyer as any).startY = groundY - 200; (flyer as any).timer = 0;
+          (flyer as any).startX = worldX + 32; (flyer as any).startY = groundY - 250; (flyer as any).timer = 0;
           hasObject = true;
         }
-        
-        // Checkpoints
-        if (x % 200 === 0 && x > 0 && !hasObject) {
-          const cp = this.add.sprite(worldX + 32, groundY - 25, "checkpoint_ph");
-          this.physics.add.existing(cp, true);
-          this.physics.add.overlap(this.player, cp, () => {
-            if (!this.lastCheckpoint || this.lastCheckpoint.x < worldX) {
-              this.lastCheckpoint = { x: worldX, y: groundY - 100 };
-              const flash = this.add.circle(cp.x, cp.y, 40, 0x00ff00);
-              this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
-            }
-          });
+
+        // Mais molas e armadilhas de espinhos no pouso
+        if (x % 80 === 40 && !hasObject) {
+          this.springs.create(worldX + 32, groundY - 32, "spring_ph");
+        } else if (x % 110 === 0 && !hasObject) {
+          this.spikes.create(worldX + 32, groundY - 32, "spike_ph");
         }
       }
 
       // LEVEL 4: CASINO NEON
       else if (this.currentLevel === 4) {
-        if (x % 60 > 55) continue;
+        if (x % 180 > 170) continue;
         const plat = this.add.tileSprite(worldX + 32, groundY + 32, blockSize, blockSize, tileKey);
         this.physics.add.existing(plat, true);
         this.platforms.add(plat as unknown as Phaser.Physics.Arcade.Image);
 
-        // Bouncy pinball traps
-        if (x % 30 >= 10 && x % 30 <= 15) {
+        // Bouncy pinball traps (BUMPERS)
+        if (x % 150 >= 50 && x % 150 <= 60) {
           if (!hasObject) {
-            this.springs.create(worldX + 32, groundY - 32, "spring_ph");
-            const topSpring = this.springs.create(worldX + 32, groundY - 250, "spring_ph");
-            topSpring.angle = 180; // Point down to trap the player bouncing
+            const bumper1 = this.springs.create(worldX + 32, groundY - 100, "spring_ph");
+            (bumper1 as any).isBumper = true;
+            bumper1.setTint(0xff00ff);
+            bumper1.angle = Math.random() * 360;
+
+            const bumper2 = this.springs.create(worldX + 32, groundY - 250, "spring_ph");
+            (bumper2 as any).isBumper = true;
+            bumper2.setTint(0x00ffff);
+            bumper2.angle = Math.random() * 360;
           }
           hasObject = true;
         }
         // Big ring clusters
-        if (x % 40 >= 20 && x % 40 <= 25) {
+        if (x % 80 >= 30 && x % 80 <= 35) {
           this.rings.create(worldX + 32, groundY - 150, "ring_ph");
           this.rings.create(worldX + 32, groundY - 200, "ring_ph");
           this.rings.create(worldX + 32, groundY - 250, "ring_ph");
         }
-        if (x > 0 && x % 70 === 35) {
+        if (x > 0 && x % 150 === 75) {
           this.createLoopVisual(worldX, groundY);
           lastLoopX = x;
           hasObject = true;
@@ -1889,34 +1962,38 @@ export class MainScene extends Phaser.Scene {
         }
       }
 
-      // LEVEL 5: VOLCANO BOSS
+      // LEVEL 5: VOLCANO BOSS (Insano: Lava, Plataformas que quebram, Mísseis e Inimigos Terrestres)
       else {
-        // Lots of lava pits
-        const isLava = x % 40 > 30;
+        const isLava = x % 80 > 65; // Gaps frequentes preenchidos com lava
         
         if (isLava) {
-           // Deadly lava pool
            const lava = this.add.rectangle(worldX + 32, groundY + 64, blockSize, blockSize, 0xff3300);
            this.physics.add.existing(lava, true);
-           // Using spikes group for instant death/damage
-           this.spikes.add(lava as unknown as Phaser.Physics.Arcade.Image);
+           this.spikes.add(lava as unknown as Phaser.Physics.Arcade.Image); // Dano instakill/perda de anéis
         } else {
            const plat = this.add.tileSprite(worldX + 32, groundY + 32, blockSize, blockSize, tileKey);
            this.physics.add.existing(plat, true);
            this.platforms.add(plat as unknown as Phaser.Physics.Arcade.Image);
         }
 
-        // Stepping stones over lava
+        // Plataformas caindo sobre a lava
         if (isLava && x % 2 === 0) {
-           const plat = this.add.tileSprite(worldX + 32, groundY - 100, blockSize/2, blockSize/2, tileKey);
-           this.physics.add.existing(plat, true);
-           this.platforms.add(plat as unknown as Phaser.Physics.Arcade.Image);
+           const breakablePlat = this.add.tileSprite(worldX + 32, groundY - 100, blockSize, blockSize/2, tileKey);
+           this.physics.add.existing(breakablePlat, true);
+           this.breakablePlatforms.add(breakablePlat as unknown as Phaser.Physics.Arcade.Image);
         }
 
-        if (x % 60 === 0 && !hasObject && !isLava) {
+        if (x > 0 && x % 70 === 0 && !isLava && !hasObject) {
           const enemy = this.enemies.create(worldX + 32, groundY - 64, "enemy_ph");
           enemy.setScale(0.128); enemy.body.allowGravity = true; (enemy as any).startX = worldX + 32;
           hasObject = true;
+        }
+
+        if (x > 0 && x % 110 === 0 && !hasObject) {
+          // Chuva de projéteis lentos (peculiaridade)
+          const proj = this.enemyProjectiles.create(worldX + Math.random()*200, groundY - 600, "projectile_ph");
+          proj.setVelocity(0, 150);
+          proj.setTint(0xffaa00);
         }
       }
     } // Close first for loop
@@ -1946,6 +2023,21 @@ export class MainScene extends Phaser.Scene {
       e.body.setSize(e.width * 0.6, e.height * 0.6);
       e.body.setOffset(e.width * 0.2, e.height * 0.2);
     });
+
+    // ==== THEME COLORING FOR OBSTACLES & ENEMIES ====
+    const tintObstacle = (item: any) => {
+      if (!item || !item.setTint) return;
+      if (this.currentLevel === 2) item.setTint(0xffb6c1); // Pinkish for Marble/Ruins
+      if (this.currentLevel === 3) item.setTint(0x00ffff); // Neon blue for Starlight
+      if (this.currentLevel === 4) item.setTint(0xff00ff); // Neon pink for Casino
+      if (this.currentLevel === 5) item.setTint(0xff3300); // Red for Volcano
+    };
+
+    this.enemies.getChildren().forEach(tintObstacle);
+    this.flyingEnemies.getChildren().forEach(tintObstacle);
+    this.spikes.getChildren().forEach(tintObstacle);
+    this.springs.getChildren().forEach(tintObstacle);
+    // ================================================
     this.spikes.getChildren().forEach((e: any) => {
       e.setDisplaySize(64, 64);
       e.body.setSize(e.width * 0.9, e.height * 0.9);
@@ -2261,14 +2353,13 @@ export class MainScene extends Phaser.Scene {
 
     this.loopSpeed = Math.abs(this.player.body.velocity.x) / this.LOOP_RADIUS; // Angular velocity
 
-    // Zoom Out Camera for Cinematic effect
-
-    this.cameras.main.zoomTo(0.6, 500, "Sine.easeInOut");
-
+    // Efeito sonoro de Spindash ou loop
+    RetroAudio.play("spindash");
+    
+    this.cameras.main.zoomTo(0.7, 400, "Sine.easeInOut"); // Um pouco menos de zoom out para não perder detalhe
+    
     // Disable Arcade Physics gravity temporarily
-
     this.player.body.allowGravity = false;
-
     this.player.setVelocity(0, 0);
   }
 
@@ -2279,6 +2370,8 @@ export class MainScene extends Phaser.Scene {
 
     this.ringCount++;
     this.events.emit("updateRings", this.ringCount);
+    window.dispatchEvent(new CustomEvent("sonic-rings", { detail: this.ringCount }));
+    window.dispatchEvent(new CustomEvent("sonic-ring-collected"));
 
     if (this.ringCount % 20 === 0) {
       this.lives++;
@@ -2306,7 +2399,28 @@ export class MainScene extends Phaser.Scene {
   }
 
   private hitSpring(player: any, spring: any) {
-    if (spring.body.touching.up && player.body.touching.down) {
+    if ((spring as any).isBumper) {
+        // Pinball Bumper logic
+        const angle = Phaser.Math.Angle.Between(spring.x, spring.y, player.x, player.y);
+        const speed = 1500;
+        player.setVelocityX(Math.cos(angle) * speed);
+        player.setVelocityY(Math.sin(angle) * speed);
+        
+        this.score += 50;
+        this.events.emit("updateScore", this.score);
+        RetroAudio.play("ring"); // Pinball hit sound
+        
+        // Visual effect
+        const flash = this.add.circle(spring.x, spring.y, 40, 0xffffff);
+        this.tweens.add({ targets: flash, alpha: 0, scale: 2, duration: 200, onComplete: () => flash.destroy() });
+        return;
+    }
+
+    if (spring.angle === 180) {
+      player.setVelocityY(2000); // Bounces down
+      spring.setScale(1, 0.5);
+      this.tweens.add({ targets: spring, scaleY: 1, duration: 200, ease: "Bounce.easeOut" });
+    } else if (spring.body.touching.up && player.body.touching.down) {
       player.setVelocityY(-2000);
 
       this.currentState = PlayerState.JUMPING;
@@ -2373,12 +2487,30 @@ export class MainScene extends Phaser.Scene {
 
     if (isAttacking) {
       // Destrói o inimigo (faz ele sumir)
-
       enemy.disableBody(true, true);
 
-      this.score += 100;
-
+      // Score base do inimigo vezes o multiplicador da fase atual!
+      const gainedScore = 100 * this.currentLevel;
+      this.score += gainedScore;
       this.events.emit("updateScore", this.score);
+
+      // EFEITO VISUAL: Texto Flutuante de Pontos!
+      const scoreText = this.add.text(enemy.x, enemy.y - 30, `+${gainedScore}`, {
+        fontSize: '20px',
+        fontFamily: '"Press Start 2P", monospace',
+        color: '#ffff00',
+        stroke: '#000000',
+        strokeThickness: 4
+      }).setOrigin(0.5).setDepth(200);
+
+      this.tweens.add({
+        targets: scoreText,
+        y: enemy.y - 100,
+        alpha: 0,
+        duration: 800,
+        ease: 'Power2',
+        onComplete: () => scoreText.destroy()
+      });
 
       // Quica o jogador
 
@@ -2427,7 +2559,7 @@ export class MainScene extends Phaser.Scene {
       this.player.x,
       this.player.y,
       'img',
-      `width: 150px; height: 150px; object-fit: contain; pointer-events: none; opacity: 0.3; filter: brightness(1.5); transform: ${this.currentFlipX ? 'scaleX(-1)' : 'scaleX(1)'};`
+      `width: ${this.characterChoice === "shadow" ? "170px" : "150px"}; height: ${this.characterChoice === "shadow" ? "170px" : "150px"}; object-fit: contain; pointer-events: none; opacity: 0.3; filter: brightness(1.5); transform: ${this.currentFlipX ? 'scaleX(-1)' : 'scaleX(1)'};`
     );
     (trail.node as HTMLImageElement).src = (this.playerGif.node as HTMLImageElement).src;
     this.tweens.add({ targets: trail, alpha: 0, scale: 1.2, duration: 300, onComplete: () => trail.destroy() });
@@ -2477,6 +2609,7 @@ export class MainScene extends Phaser.Scene {
     
     this.events.emit("updateLives", this.lives);
     this.events.emit("updateRings", this.ringCount);
+    window.dispatchEvent(new CustomEvent("sonic-rings", { detail: this.ringCount }));
 
     if (this.lives <= 0) {
       // GAME OVER
@@ -2563,6 +2696,22 @@ export class MainScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
+    if (!this.player || !this.player.active) return;
+    
+    // AFK Easter Egg logic
+    const v = this.player.body.velocity;
+    const isMoving = Math.abs(v.x) > 5 || Math.abs(v.y) > 5 || this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.space.isDown;
+    
+    if (!isMoving) {
+      this.afkTimer += delta;
+      if (this.afkTimer > 15000 && !this.afkTriggered) { // 15 seconds
+        this.afkTriggered = true;
+        window.dispatchEvent(new CustomEvent('sonic-easter-egg', { detail: 'afk' }));
+      }
+    } else {
+      this.afkTimer = 0;
+    }
+
     if (this.isLevelComplete) {
       if (this.player.body.velocity.x > 0) {
         this.player.body.setAccelerationX(0);
@@ -2582,17 +2731,41 @@ export class MainScene extends Phaser.Scene {
     window.dispatchEvent(new CustomEvent("phaser-scroll", { detail: { scrollX: this.cameras.main.scrollX, scrollY: this.cameras.main.scrollY } }));
     window.dispatchEvent(new CustomEvent("phaser-time", { detail: this.gameTime }));
 
+    // --- CÂMERA DINÂMICA DE VELOCIDADE E RASTRO (MOTION BLUR) ---
+    const currentSpeed = Math.abs(this.player.body.velocity.x);
+    let targetZoom = 1;
+
+    // Se estiver muito rápido, tira o zoom para ver mais longe
+    if (currentSpeed > this.MAX_SPEED * 0.8) {
+      targetZoom = 0.85; 
+      // Emite rastro de luz do personagem
+      if (Math.random() > 0.7) this.createSpeedTrail();
+    } else if (currentSpeed > this.MAX_SPEED * 0.5) {
+      targetZoom = 0.95;
+    }
+
+    // Interpolação suave do zoom da câmera
+    if (!this.isLooping) {
+        this.cameras.main.setZoom(
+            Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, dt * 2)
+        );
+    }
+
     // Update GIF state
 
     let targetGif =
       this.characterChoice === "sonic"
         ? "sonic%20correndo.gif"
+        : this.characterChoice === "tails"
+        ? "dg96skq-28d97178-f8c8-455d-aa3f-ff258fb295da.gif"
         : "shadow%20correndo.gif";
 
     if (this.currentState === PlayerState.LOOPING) {
       targetGif =
         this.characterChoice === "sonic"
           ? "sonic-rodando.gif"
+          : this.characterChoice === "tails"
+          ? "dg96skq-28d97178-f8c8-455d-aa3f-ff258fb295da.gif"
           : "shadow%20correndo.gif";
     }
 
@@ -2624,6 +2797,10 @@ export class MainScene extends Phaser.Scene {
       }
 
       const rad = Phaser.Math.DegToRad(this.loopAngle);
+      
+      // Efeito de gravidade para realismo (desacelera subindo, acelera descendo)
+      this.loopSpeed -= Math.cos(rad) * 1.5 * dt; 
+      if (this.loopSpeed < 3) this.loopSpeed = 3; // Impede que ele caia do loop para manter a jogabilidade fácil
 
       this.player.x =
         this.loopCenter.x +
@@ -2633,15 +2810,16 @@ export class MainScene extends Phaser.Scene {
         this.loopCenter.y +
         Math.sin(rad) * (this.LOOP_RADIUS - this.player.body.halfHeight);
 
-      // Rotate GIF to match loop tangent
+      // Efeito de rastro (Speed Trail) enquanto no loop!
+      if (Math.random() > 0.4) {
+        this.createSpeedTrail();
+      }
 
+      // Rotate GIF to match loop tangent
       if (this.playerGif) {
         const rotationDeg = this.loopAngle - 90;
-
         this.playerGif.setAngle(rotationDeg);
-
-        this.playerGif.setScale(this.currentFlipX ? -1 : 1, 1);
-
+        this.playerGif.setScale(this.loopDirection === 1 ? 1 : -1, 1);
         this.playerGif.setPosition(this.player.x, this.player.y);
       }
 
@@ -2653,28 +2831,21 @@ export class MainScene extends Phaser.Scene {
       ) {
         this.isLooping = false;
 
-        // Zoom Camera back in
-
-        this.cameras.main.zoomTo(1, 500, "Sine.easeInOut");
-
+        this.cameras.main.zoomTo(1, 400, "Sine.easeInOut");
         this.currentState = PlayerState.RUNNING;
-
         this.player.body.allowGravity = true;
 
-        // Eject slightly above ground to prevent sinking into the tile bounds
-
-        this.player.y -= 10;
-
-        this.player.setVelocityX(
-          (this.loopSpeed * this.LOOP_RADIUS + 500) * this.loopDirection,
-        ); // Shoot out faster!
-
-        this.player.setVelocityY(-100); // Pop up out of the floor
+        // Saída suave e veloz
+        this.player.y -= 15;
+        this.player.setVelocityX((this.loopSpeed * this.LOOP_RADIUS + 800) * this.loopDirection);
+        this.player.setVelocityY(-50); // Apenas um leve ajuste para não bater no chão
+        
+        // Boost Sound
+        RetroAudio.play("jump");
 
         if (this.playerGif) {
           this.playerGif.setAngle(0);
-
-          this.playerGif.setScale(this.currentFlipX ? -1 : 1, 1);
+          this.playerGif.setScale(this.loopDirection === 1 ? 1 : -1, 1);
         }
       }
 
@@ -2971,9 +3142,16 @@ export class MainScene extends Phaser.Scene {
 
     const currentJump = this.isUnderwater
       ? this.JUMP_FORCE * 0.6
-      : this.JUMP_FORCE;
+      : (this.currentLevel === 3 ? this.JUMP_FORCE * 1.5 : this.JUMP_FORCE); // Moon jump
 
     this.player.body.setMaxVelocity(currentMaxSpeed, 2500);
+
+    // Level 3 Space Gravity
+    if (this.currentLevel === 3 && !this.isUnderwater) {
+      this.player.setGravityY(this.GRAVITY * 0.4);
+    } else {
+      this.player.setGravityY(this.GRAVITY);
+    }
 
     // Update Boss
 
@@ -3399,7 +3577,7 @@ export class MainScene extends Phaser.Scene {
 
       this.hasPerformedAirAction = false;
 
-      this.hasDoubleJumped = false;
+      this.jumpCount = 0;
 
       if (this.isDropDashing && this.characterChoice === "sonic") {
         // Execute Drop Dash on landing
@@ -3425,6 +3603,7 @@ export class MainScene extends Phaser.Scene {
         RetroAudio.play("jump");
 
         this.player.setVelocityY(currentJump);
+        this.jumpCount = 1;
       } else if (Math.abs(velX) > 50) {
         this.currentState = PlayerState.RUNNING;
       } else {
@@ -3433,128 +3612,110 @@ export class MainScene extends Phaser.Scene {
     } else {
       // In Air
 
-      if (jumpJustDown && this.currentState === PlayerState.JUMPING) {
-        if (!this.hasDoubleJumped) {
-          // DOUBLE JUMP
-          this.hasDoubleJumped = true;
+      if (jumpJustDown) {
+        this.currentState = PlayerState.JUMPING;
 
-          if (this.ringCount >= 50 && !this.isSuper && this.currentShield === "none") {
-            this.isSuper = true;
-            this.superTimer = 0;
-            RetroAudio.play("spindash"); 
-            
-            for (let i = 0; i < 20; i++) {
-              const angle = (i / 20) * Math.PI * 2;
-              const spark = this.add.circle(this.player.x, this.player.y, 8, 0xffff00);
-              this.tweens.add({
-                targets: spark,
-                x: spark.x + Math.cos(angle) * 120,
-                y: spark.y + Math.sin(angle) * 120,
-                alpha: 0,
-                scale: 0.2,
-                duration: 600,
-                onComplete: () => spark.destroy(),
-              });
-            }
-          } else {
-            this.player.setVelocityY(currentJump); // Second impulse
-            RetroAudio.play("jump");
-  
-            // Double Jump VFX (Starburst)
-            for (let i = 0; i < 12; i++) {
-              const angle = (i / 12) * Math.PI * 2;
-              const spark = this.add.circle(
-                this.player.x,
-                this.player.y,
-                6,
-                0x00f3ff,
-              );
-              this.tweens.add({
-                targets: spark,
-                x: spark.x + Math.cos(angle) * 80,
-                y: spark.y + Math.sin(angle) * 80,
-                alpha: 0,
-                scale: 0.2,
-                duration: 400,
-                onComplete: () => spark.destroy(),
-              });
-            }
-          }
-        } else if (!this.hasPerformedAirAction) {
-          // SPECIAL AERIAL ATTACK (After Double Jump)
-
-          this.hasPerformedAirAction = true;
-
-          if (this.characterChoice === "sonic") {
-            // Drop Dash Charge
-
-            this.isDropDashing = true;
-
-            RetroAudio.play("spindash");
-          } else if (this.characterChoice === "shadow") {
-            // Homing Attack
-
-            let closestEnemy: any = null;
-
-            let closestDist = 800; // Radius
-
-            this.enemies.getChildren().forEach((enemy: any) => {
-              if (!enemy.active) return;
-
-              const dist = Phaser.Math.Distance.Between(
-                this.player.x,
-                this.player.y,
-                enemy.x,
-                enemy.y,
-              );
-
-              if (dist < closestDist) {
-                closestDist = dist;
-
-                closestEnemy = enemy;
-              }
+        if (this.ringCount >= 50 && !this.isSuper && this.currentShield === "none" && this.jumpCount < 1) {
+          this.jumpCount = 3; // Consumes the super transformation
+          this.isSuper = true;
+          this.superTimer = 0;
+          RetroAudio.play("spindash"); 
+          
+          for (let i = 0; i < 20; i++) {
+            const angle = (i / 20) * Math.PI * 2;
+            const spark = this.add.circle(this.player.x, this.player.y, 8, 0xffff00);
+            this.tweens.add({
+              targets: spark,
+              x: spark.x + Math.cos(angle) * 120,
+              y: spark.y + Math.sin(angle) * 120,
+              alpha: 0,
+              scale: 0.2,
+              duration: 600,
+              onComplete: () => spark.destroy(),
             });
-
-            if (closestEnemy) {
-              this.physics.moveToObject(this.player, closestEnemy, 1500);
-
-              this.player.body.allowGravity = false;
-
-              this.time.delayedCall(500, () => {
-                if (this.player && this.player.body)
-                  this.player.body.allowGravity = true;
-              });
-            } else {
-              // Air Dash if no enemies
-
-              const direction = this.player.flipX ? -1 : 1;
-
-              this.player.setVelocityX(1200 * direction);
-
-              this.player.setVelocityY(0);
-            }
           }
+        } else if (this.jumpCount < 3) {
+          this.jumpCount++;
+          const isThirdJump = this.jumpCount === 3;
+          this.player.setVelocityY(isThirdJump ? currentJump * 0.7 : currentJump); 
+          RetroAudio.play("jump");
 
-          // Shield Actions override Drop Dash/Homing if they exist
+          // Air Jump VFX (Starburst)
+          for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const spark = this.add.circle(
+              this.player.x,
+              this.player.y,
+              6,
+              0x00f3ff,
+            );
+            this.tweens.add({
+              targets: spark,
+              x: spark.x + Math.cos(angle) * 80,
+              y: spark.y + Math.sin(angle) * 80,
+              alpha: 0,
+              scale: 0.2,
+              duration: 400,
+              onComplete: () => spark.destroy(),
+            });
+          }
+        }
+      }
+      
+      if (actionJustDown && !this.hasPerformedAirAction) {
+        // SPECIAL AERIAL ATTACK (Action Button)
+        this.hasPerformedAirAction = true;
 
-          if (this.currentShield !== "none") {
-            this.isDropDashing = false; // Cancel drop dash charge
+        if (this.characterChoice === "sonic") {
+          // Drop Dash Charge
+          this.isDropDashing = true;
+          RetroAudio.play("spindash");
+        } else if (this.characterChoice === "tails") {
+          // Tails flies/double jumps
+          this.player.setVelocityY(-600);
+          RetroAudio.play("jump");
+        } else if (this.characterChoice === "shadow") {
+          // Homing Attack
+          let closestEnemy: any = null;
+          let closestDist = 800; // Radius
 
-            RetroAudio.play("jump"); // Play action sound
-
-            if (this.currentShield === "fire") {
-              const direction = this.player.flipX ? -1 : 1;
-
-              this.player.setVelocityX(1500 * direction);
-
-              this.player.setVelocityY(0);
-            } else if (this.currentShield === "water") {
-              this.player.setVelocityY(1500); // Bounce down
-
-              this.player.setVelocityX(0);
-            } else if (this.currentShield === "lightning") {
-              this.player.setVelocityY(currentJump * 0.8); // Third jump effectively
+          this.enemies.getChildren().forEach((enemy: any) => {
+            if (!enemy.active) return;
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestEnemy = enemy;
             }
+          });
+
+          if (closestEnemy) {
+            this.physics.moveToObject(this.player, closestEnemy, 1500);
+            this.player.body.allowGravity = false;
+            this.time.delayedCall(500, () => {
+              if (this.player && this.player.body) this.player.body.allowGravity = true;
+            });
+          } else {
+            // Air Dash if no enemies
+            const direction = this.player.flipX ? -1 : 1;
+            this.player.setVelocityX(1200 * direction);
+            this.player.setVelocityY(0);
+          }
+        }
+
+        // Shield Actions override Drop Dash/Homing if they exist
+        if (this.currentShield !== "none") {
+          this.isDropDashing = false; // Cancel drop dash charge
+          RetroAudio.play("jump"); // Play action sound
+
+          if (this.currentShield === "fire") {
+            const direction = this.player.flipX ? -1 : 1;
+            this.player.setVelocityX(1500 * direction);
+            this.player.setVelocityY(0);
+          } else if (this.currentShield === "water") {
+            this.player.setVelocityY(1500); // Bounce down
+            this.player.setVelocityX(0);
+          } else if (this.currentShield === "lightning") {
+            this.player.setVelocityY(currentJump * 0.8); // Double jump effectively
           }
         }
       }
@@ -3666,10 +3827,12 @@ export class MainScene extends Phaser.Scene {
     }
 
     if (this.playerGif) {
+      const baseHeight = this.characterChoice === "shadow" ? "170px" : "150px";
+      const spinHeight = this.characterChoice === "shadow" ? "115px" : "100px";
       if (this.currentState === PlayerState.SPINDASHING || this.isDropDashing) {
-        (this.playerGif.node as HTMLElement).style.height = "100px";
+        (this.playerGif.node as HTMLElement).style.height = spinHeight;
       } else {
-        (this.playerGif.node as HTMLElement).style.height = "150px";
+        (this.playerGif.node as HTMLElement).style.height = baseHeight;
       }
     }
   }
@@ -3819,7 +3982,7 @@ export class UIScene extends Phaser.Scene {
     const overlay = this.add.rectangle(w / 2, h / 2, w, h, 0x000000, 0.7);
 
     const pauseTitle = this.add
-      .text(w / 2, h / 2 - 100, "PAUSED", {
+      .text(w / 2, h / 2 - 100, "PAUSADO", {
         fontFamily: '"Press Start 2P"',
         fontSize: "40px",
         color: "#FFF",
@@ -3827,7 +3990,7 @@ export class UIScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const resumeBtn = this.add
-      .text(w / 2, h / 2 + 20, "RESUME", {
+      .text(w / 2, h / 2 + 20, "Voltar a jogar", {
         fontFamily: '"Press Start 2P"',
         fontSize: "24px",
         color: "#FFD700",
@@ -3837,12 +4000,11 @@ export class UIScene extends Phaser.Scene {
 
     resumeBtn.on("pointerdown", () => {
       mainScene.scene.resume();
-
       pauseGroup.setVisible(false);
     });
 
     const quitBtn = this.add
-      .text(w / 2, h / 2 + 80, "QUIT GAME", {
+      .text(w / 2, h / 2 + 80, "Sair", {
         fontFamily: '"Press Start 2P"',
         fontSize: "24px",
         color: "#FF0000",
@@ -3858,17 +4020,21 @@ export class UIScene extends Phaser.Scene {
 
     pauseGroup.setVisible(false);
 
-    backBtn.on("pointerdown", () => {
+    const togglePause = () => {
       if (mainScene.scene.isPaused()) {
         mainScene.scene.resume();
-
         pauseGroup.setVisible(false);
       } else {
         mainScene.scene.pause();
-
         pauseGroup.setVisible(true);
       }
-    });
+    };
+
+    backBtn.on("pointerdown", togglePause);
+    
+    if (this.input.keyboard) {
+      this.input.keyboard.on('keydown-ESC', togglePause);
+    }
 
     let flashTween: Phaser.Tweens.Tween | null = null;
 

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 interface TransitionScreenProps {
   level: number;
-  character: 'sonic' | 'shadow';
+  character: 'sonic' | 'shadow' | 'tails';
   onComplete: () => void;
 }
 
@@ -318,7 +318,7 @@ const TransitionScreen: React.FC<TransitionScreenProps> = ({ level, character, o
         initial={{ x: '-50vw' }}
         animate={phase === 'sprint' ? { x: '150vw' } : { x: '10vw' }}
         transition={phase === 'sprint' ? { duration: 0.35, ease: 'easeIn' } : { duration: 0.8, type: 'spring', stiffness: 50, delay: 1.2 }}
-        src={`/imagens/${character === 'sonic' ? 'sonic%20correndo.gif' : 'shadow%20correndo.gif'}`}
+        src={`/imagens/${character === 'sonic' ? 'sonic%20correndo.gif' : character === 'tails' ? 'dg96skq-28d97178-f8c8-455d-aa3f-ff258fb295da.gif' : 'shadow%20correndo.gif'}`}
         style={{
           position: 'absolute',
           bottom: '10%',

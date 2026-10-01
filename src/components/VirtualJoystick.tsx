@@ -1,11 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 export const VirtualJoystick: React.FC<{ character: string }> = ({ character }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     (window as any).sonicVirtualJoystick = {
       left: false, right: false, down: false, up: false, jump: false, jumpJustDown: false, actionJustDown: false
     };
+    
+    // Check if it's a touch device
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+      setIsMobile(true);
+    }
   }, []);
 
   const handleTouch = (key: string, state: boolean) => (e: React.SyntheticEvent) => {
@@ -18,103 +25,48 @@ export const VirtualJoystick: React.FC<{ character: string }> = ({ character }) 
     }
   };
 
+  if (!isMobile) return null;
+
   const btnStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    backdropFilter: 'blur(5px)',
-    border: '2px solid rgba(255, 255, 255, 0.4)',
-    color: '#fff',
-    borderRadius: '50%',
-    width: '60px',
-    height: '60px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '24px',
-    userSelect: 'none' as const,
-    WebkitUserSelect: 'none' as const,
-    touchAction: 'none' as const,
+    width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', border: '2px solid rgba(255, 255, 255, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '24px', userSelect: 'none' as const, touchAction: 'none' as const, backdropFilter: 'blur(4px)'
   };
 
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 100 }}>
-      {/* D-PAD (Left side) */}
-      <div style={{ position: 'absolute', bottom: '40px', left: '40px', display: 'flex', gap: '10px', pointerEvents: 'auto' }}>
-        <motion.div
-          style={btnStyle}
-          whileTap={{ scale: 0.9, backgroundColor: 'rgba(255, 255, 255, 0.5)' }}
-          onTouchStart={handleTouch('left', true)}
-          onTouchEnd={handleTouch('left', false)}
-          onMouseDown={handleTouch('left', true)}
-          onMouseUp={handleTouch('left', false)}
-          onMouseLeave={handleTouch('left', false)}
-        >
-          ◀
-        </motion.div>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <motion.div
-            style={btnStyle}
-            whileTap={{ scale: 0.9, backgroundColor: 'rgba(255, 255, 255, 0.5)' }}
-            onTouchStart={handleTouch('up', true)}
-            onTouchEnd={handleTouch('up', false)}
-            onMouseDown={handleTouch('up', true)}
-            onMouseUp={handleTouch('up', false)}
-            onMouseLeave={handleTouch('up', false)}
-          >
-            ▲
-          </motion.div>
-          
-          <motion.div
-            style={btnStyle}
-            whileTap={{ scale: 0.9, backgroundColor: 'rgba(255, 255, 255, 0.5)' }}
-            onTouchStart={handleTouch('down', true)}
-            onTouchEnd={handleTouch('down', false)}
-            onMouseDown={handleTouch('down', true)}
-            onMouseUp={handleTouch('down', false)}
-            onMouseLeave={handleTouch('down', false)}
-          >
-            ▼
-          </motion.div>
-        </div>
-
-        <motion.div
-          style={btnStyle}
-          whileTap={{ scale: 0.9, backgroundColor: 'rgba(255, 255, 255, 0.5)' }}
-          onTouchStart={handleTouch('right', true)}
-          onTouchEnd={handleTouch('right', false)}
-          onMouseDown={handleTouch('right', true)}
-          onMouseUp={handleTouch('right', false)}
-          onMouseLeave={handleTouch('right', false)}
-        >
-          ▶
-        </motion.div>
+    <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', display: 'flex', justifyContent: 'space-between', zIndex: 1000, pointerEvents: 'none' }}>
+      {/* D-PAD */}
+      <div style={{ position: 'relative', width: '150px', height: '150px', pointerEvents: 'auto' }}>
+        <div 
+          style={{ ...btnStyle, position: 'absolute', top: 0, left: '45px' }}
+          onTouchStart={handleTouch('up', true)} onTouchEnd={handleTouch('up', false)}
+        >▲</div>
+        <div 
+          style={{ ...btnStyle, position: 'absolute', bottom: 0, left: '45px' }}
+          onTouchStart={handleTouch('down', true)} onTouchEnd={handleTouch('down', false)}
+        >▼</div>
+        <div 
+          style={{ ...btnStyle, position: 'absolute', top: '45px', left: 0 }}
+          onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}
+        >◀</div>
+        <div 
+          style={{ ...btnStyle, position: 'absolute', top: '45px', right: 0 }}
+          onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}
+        >▶</div>
       </div>
 
-      {/* Action Buttons (Right side) */}
-      <div style={{ position: 'absolute', bottom: '50px', right: '50px', display: 'flex', gap: '20px', pointerEvents: 'auto' }}>
-        <motion.div
-          style={{ ...btnStyle, width: '70px', height: '70px', backgroundColor: 'rgba(255, 0, 0, 0.3)', borderColor: 'rgba(255, 100, 100, 0.6)' }}
-          whileTap={{ scale: 0.9, backgroundColor: 'rgba(255, 50, 50, 0.6)' }}
-          onTouchStart={handleTouch('action', true)}
-          onTouchEnd={handleTouch('action', false)}
-          onMouseDown={handleTouch('action', true)}
-          onMouseUp={handleTouch('action', false)}
-          onMouseLeave={handleTouch('action', false)}
+      {/* ACTION BUTTONS */}
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', pointerEvents: 'auto', paddingBottom: '20px' }}>
+        <div 
+          style={{ ...btnStyle, width: '70px', height: '70px', background: character === 'sonic' ? 'rgba(0, 100, 255, 0.4)' : 'rgba(255, 0, 0, 0.4)' }}
+          onTouchStart={handleTouch('action', true)} onTouchEnd={handleTouch('action', false)}
         >
-          {character === 'shadow' ? 'C' : 'D'}
-        </motion.div>
-
-        <motion.div
-          style={{ ...btnStyle, width: '80px', height: '80px', backgroundColor: 'rgba(0, 150, 255, 0.3)', borderColor: 'rgba(100, 200, 255, 0.6)' }}
-          whileTap={{ scale: 0.9, backgroundColor: 'rgba(50, 180, 255, 0.6)' }}
-          onTouchStart={handleTouch('jump', true)}
-          onTouchEnd={handleTouch('jump', false)}
-          onMouseDown={handleTouch('jump', true)}
-          onMouseUp={handleTouch('jump', false)}
-          onMouseLeave={handleTouch('jump', false)}
+          {character === 'sonic' ? 'DASH' : 'ATK'}
+        </div>
+        <div 
+          style={{ ...btnStyle, width: '80px', height: '80px', background: 'rgba(255, 200, 0, 0.4)' }}
+          onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}
         >
-          A
-        </motion.div>
+          JUMP
+        </div>
       </div>
     </div>
   );
