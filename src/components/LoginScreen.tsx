@@ -2,12 +2,16 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { loginWithGoogle } from '../services/firebase';
 
+import { BGMManager } from '../utils/audio';
+
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const handleLogin = async () => {
+    BGMManager.init(); 
+    BGMManager.unlockAudio(); // Garante o destravamento imediato do áudio diretamente no clique do React!
     const user = await loginWithGoogle();
     if (user) {
       onLoginSuccess();

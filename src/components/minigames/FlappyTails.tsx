@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion } from 'framer-motion';
 
 export default function FlappyTails({ onClose }: { onClose: () => void }) {
@@ -44,7 +45,7 @@ export default function FlappyTails({ onClose }: { onClose: () => void }) {
     g.particles = [];
   }, []);
 
-  const jump = useCallback(() => {
+  const jump = useCallback(() => { UISound.play('jump');
     if (gameState === 'START') {
       resetGame();
       setScore(0);
@@ -235,7 +236,7 @@ export default function FlappyTails({ onClose }: { onClose: () => void }) {
           }
         }
         if (died) {
-          setGameState('GAMEOVER');
+          UISound.play('lose'); setGameState('GAMEOVER');
           setScore(s => { const best = Math.max(s, bestScore); setBestScore(best); localStorage.setItem('flappy_best', best.toString()); return s; });
         }
 
@@ -296,7 +297,7 @@ export default function FlappyTails({ onClose }: { onClose: () => void }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '500px' }}>
-        <canvas ref={canvasRef} onClick={jump} onTouchStart={(e) => { e.preventDefault(); jump(); }}
+        <canvas ref={canvasRef} onClick={(e) => { UISound.play("click"); jump(e); }} onTouchStart={(e) => { e.preventDefault(); jump(); }}
           style={{ width: '100%', height: '100%', display: 'block', cursor: 'pointer' }} />
         
         <img
@@ -334,16 +335,16 @@ export default function FlappyTails({ onClose }: { onClose: () => void }) {
         {gameState === 'PAUSED' && (
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', zIndex: 50 }}>
             <h2 style={{ color: '#FFF', fontFamily: '"Press Start 2P", monospace', fontSize: '30px', marginBottom: '40px' }}>PAUSADO</h2>
-            <button onClick={() => setGameState('PLAYING')} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FFD700', color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', marginBottom: '20px' }}>
+            <button onClick={() => { UISound.play("click"); setGameState('PLAYING')}} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FFD700', color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', marginBottom: '20px' }}>
               Voltar a jogar
             </button>
-            <button onClick={onClose} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FF0000', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace' }}>
+            <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FF0000', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace' }}>
               Sair
             </button>
           </div>
         )}
       </div>
-      <button onClick={onClose} style={{ position: 'absolute', top: 15, left: 15, padding: '8px 18px', background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 10 }}>Voltar</button>
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ position: 'absolute', top: 15, left: 15, padding: '8px 18px', background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 10 }}>Voltar</button>
     </motion.div>
   );
 }

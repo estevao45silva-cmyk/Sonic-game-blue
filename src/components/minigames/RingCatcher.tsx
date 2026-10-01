@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion } from 'framer-motion';
 
 export default function RingCatcher({ onClose }: { onClose: () => void }) {
@@ -51,7 +52,7 @@ export default function RingCatcher({ onClose }: { onClose: () => void }) {
     const interval = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) {
-          setGameState('GAMEOVER');
+          UISound.play('lose'); setGameState('GAMEOVER');
           setScore(s => {
             const best = Math.max(s, bestScore);
             setBestScore(best);
@@ -409,7 +410,7 @@ export default function RingCatcher({ onClose }: { onClose: () => void }) {
       <div style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '500px' }}>
         <canvas
           ref={canvasRef}
-          onClick={(e) => { if (gameState !== 'PLAYING') startGame(); }}
+          onClick={(e) => { UISound.play("click"); if (gameState !== 'PLAYING') startGame(); }}
           onMouseMove={(e) => handleMove(e.clientX)}
           onTouchStart={(e) => { e.preventDefault(); if (gameState !== 'PLAYING') startGame(); handleMove(e.touches[0].clientX); }}
           onTouchMove={(e) => { e.preventDefault(); handleMove(e.touches[0].clientX); }}
@@ -447,17 +448,17 @@ export default function RingCatcher({ onClose }: { onClose: () => void }) {
         {gameState === 'PAUSED' && (
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', zIndex: 50 }}>
             <h2 style={{ color: '#FFF', fontFamily: '"Press Start 2P", monospace', fontSize: '30px', marginBottom: '40px' }}>PAUSADO</h2>
-            <button onClick={() => setGameState('PLAYING')} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FFD700', color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', marginBottom: '20px' }}>
+            <button onClick={() => { UISound.play("click"); setGameState('PLAYING')}} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FFD700', color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', marginBottom: '20px' }}>
               Voltar a jogar
             </button>
-            <button onClick={onClose} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FF0000', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace' }}>
+            <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FF0000', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace' }}>
               Sair
             </button>
           </div>
         )}
       </div>
 
-      <button onClick={onClose} style={{
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{
 
         position: 'absolute', top: 15, left: 15, padding: '8px 18px',
         background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)',

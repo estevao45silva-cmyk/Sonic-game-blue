@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MetalSonicRace: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -17,8 +18,8 @@ const MetalSonicRace: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     let metalSpeed = 0.2 + (level * 0.05); 
 
     const interval = setInterval(() => {
-      setSonicPos(p => { let next = p + 0.5; if (next >= 100) { setGameOver(true); setWinner('VOCÊ'); } return next; });
-      setMetalPos(p => { let next = p + metalSpeed; if (next >= 100 && !gameOver) { setGameOver(true); setWinner('OPONENTE'); } return next; });
+      setSonicPos(p => { let next = p + 0.5; if (next >= 100) { UISound.play('lose'); setGameOver(true); setWinner('VOCÊ'); } return next; });
+      setMetalPos(p => { let next = p + metalSpeed; if (next >= 100 && !gameOver) { UISound.play('lose'); setGameOver(true); setWinner('OPONENTE'); } return next; });
 
       // Obstáculos quase não aparecem e duram muuuuuito tempo para apertar
       if (Math.random() < 0.02 && !obstacle) {
@@ -49,7 +50,7 @@ const MetalSonicRace: React.FC<{ onClose: () => void }> = ({ onClose }) => {
              </p>
              <motion.button 
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={() => setStarted(true)} 
+                onClick={() => { UISound.play("click"); setStarted(true)}} 
                 style={{ padding: '15px 40px', background: 'linear-gradient(90deg, #4FACFE, #00f2fe)', color: '#000', border: 'none', borderRadius: '50px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}>
                 Começar Corrida
              </motion.button>
@@ -90,9 +91,9 @@ const MetalSonicRace: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <motion.div initial={{opacity:0}} animate={{opacity:1}} style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(20, 30, 48, 0.9)', backdropFilter: 'blur(5px)', borderRadius: '30px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 30 }}>
                <h2 style={{ color: '#00f2fe', fontSize: '30px', marginBottom: '20px' }}>{winner} VENCEU!</h2>
                {winner === 'VOCÊ' ? (
-                  <button onClick={nextRace} style={{ padding: '15px 40px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold' }}>Próxima Corrida</button>
+                  <button onClick={(e) => { UISound.play("click"); nextRace(e); }} style={{ padding: '15px 40px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold' }}>Próxima Corrida</button>
                ) : (
-                  <button onClick={() => { setSonicPos(0); setMetalPos(0); setGameOver(false); }} style={{ padding: '15px 40px', background: '#f5576c', color: '#FFF', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold' }}>Tentar Novamente</button>
+                  <button onClick={() => { UISound.play("click");  setSonicPos(0); setMetalPos(0); setGameOver(false);}} style={{ padding: '15px 40px', background: '#f5576c', color: '#FFF', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold' }}>Tentar Novamente</button>
                )}
             </motion.div>
          )}
@@ -102,12 +103,12 @@ const MetalSonicRace: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div style={{ marginTop: '50px', display: 'flex', gap: '20px', flexDirection: 'column', alignItems: 'center' }}>
          <motion.button 
             whileTap={{ scale: 0.9 }}
-            onClick={handleJump} 
+            onClick={(e) => { UISound.play("click"); handleJump(e); }} 
             style={{ width: '150px', height: '150px', borderRadius: '50%', background: obstacle ? 'linear-gradient(135deg, #00f2fe, #4FACFE)' : 'rgba(255,255,255,0.1)', color: obstacle ? '#000' : '#FFF', border: obstacle ? 'none' : '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '20px', fontWeight: 'bold', boxShadow: obstacle ? '0 0 50px rgba(0, 242, 254, 0.5)' : 'none', transition: 'background 0.3s' }}>
             {obstacle ? "BOOST!" : "AGUARDE"}
          </motion.button>
 
-         <button onClick={onClose} style={{ marginTop: '20px', padding: '10px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>Sair</button>
+         <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ marginTop: '20px', padding: '10px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>Sair</button>
       </div>
     </div>
   );

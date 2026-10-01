@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion } from 'framer-motion';
 
 // ═══════════════════════════════════════════
@@ -73,7 +74,7 @@ export default function SonicJump({ onClose }: { onClose: () => void }) {
       const y = H - 80 - i * 70;
       g.platforms.push({ x: Math.random() * (W - PLAT_W), y, w: PLAT_W, type: getRandomPlatType(0), moveDir: Math.random() > 0.5 ? 1 : -1 });
     }
-    g.playerX = W / 2; g.playerY = H - 100; g.playerVy = JUMP; g.scrollOffset = 0; g.frame = 0; g.targetX = W / 2; g.jumpTrail = [];
+    g.playerX = W / 2; g.playerY = H - 100; g.playerVy = JUMP; UISound.play('jump'); UISound.play('jump'); g.scrollOffset = 0; g.frame = 0; g.targetX = W / 2; g.jumpTrail = [];
     g.zoneIndex = 0; g.ringsCollected = 0;
     g.rocketActive = false; g.rocketTimer = 0;
     g.parachuteActive = false; g.parachuteTimer = 0;
@@ -277,11 +278,11 @@ export default function SonicJump({ onClose }: { onClose: () => void }) {
                 g.playerVy = ROCKET_JUMP; p.exploded = true;
                 for (let i = 0; i < 12; i++) g.particles.push({ x: p.x + p.w/2, y: p.y, vx: (Math.random()-0.5)*8, vy: -Math.random()*8, life: 25, color: '#FF6600', s: 3+Math.random()*3 });
               } else if (p.type === 'ice') {
-                g.playerVy = JUMP; g.targetX += (Math.random() - 0.5) * 60; // Slide!
+                g.playerVy = JUMP; UISound.play('jump'); UISound.play('jump'); g.targetX += (Math.random() - 0.5) * 60; // Slide!
               } else if (p.type === 'crumble') {
-                g.playerVy = JUMP; p.crumbleTimer = 15; // Starts crumbling
+                g.playerVy = JUMP; UISound.play('jump'); UISound.play('jump'); p.crumbleTimer = 15; // Starts crumbling
               } else {
-                g.playerVy = JUMP;
+                g.playerVy = JUMP; UISound.play('jump'); UISound.play('jump');
               }
             }
           }
@@ -300,7 +301,7 @@ export default function SonicJump({ onClose }: { onClose: () => void }) {
           }
           // Enemy hits player from side
           if (e.alive && Math.abs(g.playerX - e.x) < 18 && Math.abs(g.playerY - e.y) < 18 && g.playerVy <= 0) {
-            setGameState('GAMEOVER');
+            UISound.play('lose'); setGameState('GAMEOVER');
             setScore(s => { const best = Math.max(s, bestScore); setBestScore(best); localStorage.setItem('jump_best2', best.toString()); return s; });
           }
         }
@@ -331,7 +332,7 @@ export default function SonicJump({ onClose }: { onClose: () => void }) {
         if (g.playerX < -PLAYER_R) g.playerX = W + PLAYER_R;
         if (g.playerX > W + PLAYER_R) g.playerX = -PLAYER_R;
         if (g.playerY > H + 50) {
-          setGameState('GAMEOVER');
+          UISound.play('lose'); setGameState('GAMEOVER');
           setScore(s => { const best = Math.max(s, bestScore); setBestScore(best); localStorage.setItem('jump_best2', best.toString()); return s; });
         }
       }
@@ -480,7 +481,7 @@ export default function SonicJump({ onClose }: { onClose: () => void }) {
       style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
       <div style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '500px' }}>
         <canvas ref={canvasRef}
-          onClick={(e) => handleInput(e.clientX)}
+          onClick={(e) => { UISound.play("click"); handleInput(e.clientX); }}
           onTouchStart={(e) => { e.preventDefault(); handleInput(e.touches[0].clientX); }}
           onMouseMove={(e) => handleMove(e.clientX)}
           onTouchMove={(e) => { e.preventDefault(); handleMove(e.touches[0].clientX); }}
@@ -533,16 +534,16 @@ export default function SonicJump({ onClose }: { onClose: () => void }) {
         {gameState === 'PAUSED' && (
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', zIndex: 50 }}>
             <h2 style={{ color: '#FFF', fontFamily: '"Press Start 2P", monospace', fontSize: '30px', marginBottom: '40px' }}>PAUSADO</h2>
-            <button onClick={() => setGameState('PLAYING')} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FFD700', color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', marginBottom: '20px' }}>
+            <button onClick={() => { UISound.play("click"); setGameState('PLAYING')}} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FFD700', color: '#000', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', marginBottom: '20px' }}>
               Voltar a jogar
             </button>
-            <button onClick={onClose} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FF0000', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace' }}>
+            <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ padding: '15px 30px', fontSize: '20px', backgroundColor: '#FF0000', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace' }}>
               Sair
             </button>
           </div>
         )}
       </div>
-      <button onClick={onClose} style={{ position: 'absolute', top: 15, left: 15, padding: '8px 18px', background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 10 }}>Voltar</button>
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ position: 'absolute', top: 15, left: 15, padding: '8px 18px', background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 10 }}>Voltar</button>
     </motion.div>
   );
 }

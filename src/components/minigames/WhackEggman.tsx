@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const HOLES = [
@@ -40,7 +41,7 @@ export default function WhackEggman({ onClose }: { onClose: () => void }) {
     const interval = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) {
-          setGameState('GAMEOVER');
+          UISound.play('lose'); setGameState('GAMEOVER');
           setScore(s => {
             const best = Math.max(s, bestScore);
             setBestScore(best);
@@ -137,7 +138,7 @@ export default function WhackEggman({ onClose }: { onClose: () => void }) {
         zIndex: 1000, fontFamily: 'Arial, sans-serif', overflow: 'hidden'
       }}
     >
-      <button onClick={onClose} style={{
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{
         position: 'absolute', top: 15, left: 15, padding: '8px 18px',
         background: 'rgba(0,0,0,0.5)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)',
         borderRadius: '8px', cursor: 'pointer', fontSize: '14px', zIndex: 10
@@ -209,7 +210,7 @@ export default function WhackEggman({ onClose }: { onClose: () => void }) {
           <p style={{ color: '#FFF', fontSize: '14px', marginTop: '10px' }}>Recorde: {bestScore}</p>
           <motion.button
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            onClick={startGame}
+            onClick={(e) => { UISound.play("click"); startGame(e); }}
             style={{
               marginTop: '20px', padding: '14px 40px', fontSize: '18px', fontWeight: 'bold',
               background: 'linear-gradient(135deg, #F44336, #C62828)', color: '#FFF',
@@ -244,7 +245,7 @@ export default function WhackEggman({ onClose }: { onClose: () => void }) {
               return (
                 <div
                   key={i}
-                  onClick={() => whackMole(i)}
+                  onClick={() => { UISound.play("click"); whackMole(i)}}
                   style={{
                     position: 'absolute',
                     left: `${hole.x - 12}%`,
@@ -336,7 +337,7 @@ export default function WhackEggman({ onClose }: { onClose: () => void }) {
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  onClick={startGame}
+                  onClick={(e) => { UISound.play("click"); startGame(e); }}
                   style={{
                     marginTop: '15px', padding: '12px 35px', fontSize: '16px', fontWeight: 'bold',
                     background: 'linear-gradient(135deg, #F44336, #C62828)', color: '#FFF',

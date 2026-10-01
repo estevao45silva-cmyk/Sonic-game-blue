@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion } from 'framer-motion';
 
 interface SliceTarget {
@@ -109,7 +110,7 @@ export default function BladeRush({ onClose }: { onClose: () => void }) {
         if (t.type === 'bomb') {
           setLives(l => {
             if (l <= 1) {
-              setGameState('GAMEOVER');
+              UISound.play('lose'); setGameState('GAMEOVER');
               setScore(s => {
                 const best = Math.max(s, bestScore);
                 setBestScore(best);
@@ -246,7 +247,7 @@ export default function BladeRush({ onClose }: { onClose: () => void }) {
             if (g.missedBadniks >= 5) {
               setLives(l => {
                 if (l <= 1) {
-                  setGameState('GAMEOVER');
+                  UISound.play('lose'); setGameState('GAMEOVER');
                   setScore(s => {
                     const best = Math.max(s, bestScore);
                     setBestScore(best);
@@ -494,7 +495,7 @@ export default function BladeRush({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <button onClick={onClose} style={{
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{
         position: 'absolute', top: 15, left: 15, padding: '8px 18px',
         background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)',
         borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 10

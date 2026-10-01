@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion, AnimatePresence } from 'framer-motion';
 
 /* ════════════════════════════════════════════════
@@ -110,7 +111,7 @@ const RunnerGame: React.FC<{
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏃‍♂️</div>
         <h3 style={{ margin: '0 0 6px', fontSize: '20px', color: COLORS.primary, fontWeight: '800' }}>Pet Runner</h3>
         <p style={{ color: COLORS.textMuted, fontSize: '13px', marginBottom: '16px' }}>Pule os obstáculos de fogo! Toque ou pressione Espaço.</p>
-        <button onClick={() => { setScore(0); setObstacleX(400); setPhase('play'); }}
+        <button onClick={() => { UISound.play("click");  setScore(0); setObstacleX(400); setPhase('play');}}
           style={{ ...btnBase, padding: '12px 32px', background: `linear-gradient(135deg, ${COLORS.secondary}, ${COLORS.primary})`, color: '#000', fontSize: '16px' }}>
           Jogar 🔥
         </button>
@@ -119,7 +120,7 @@ const RunnerGame: React.FC<{
   }
 
   return (
-    <div ref={containerRef} onClick={jump} onTouchStart={jump}
+    <div ref={containerRef} onClick={(e) => { UISound.play("click"); jump(e); }} onTouchStart={jump}
       style={{ position: 'relative', width: '100%', height: '200px', background: 'linear-gradient(to bottom, #1a1a2e 0%, #16213e 100%)', borderRadius: '20px', overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}>
       {/* Score */}
       <div style={{ position: 'absolute', top: 12, right: 16, color: COLORS.accent, fontWeight: '900', fontSize: '22px', textShadow: '0 0 10px rgba(246,211,101,0.5)' }}>
@@ -232,7 +233,7 @@ const CatcherGame: React.FC<{ onEnd: (coins: number) => void }> = ({ onEnd }) =>
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧺</div>
         <h3 style={{ margin: '0 0 6px', fontSize: '20px', color: COLORS.accent, fontWeight: '800' }}>Chuva de Frutas</h3>
         <p style={{ color: COLORS.textMuted, fontSize: '13px', marginBottom: '16px' }}>Mova a cesta para pegar frutas! 30 segundos.</p>
-        <button onClick={() => { setScore(0); setTimeLeft(30); setFruits([]); setPhase('play'); }}
+        <button onClick={() => { UISound.play("click");  setScore(0); setTimeLeft(30); setFruits([]); setPhase('play');}}
           style={{ ...btnBase, padding: '12px 32px', background: `linear-gradient(135deg, ${COLORS.accent}, #fda085)`, color: '#000', fontSize: '16px' }}>
           Jogar 🍎
         </button>
@@ -333,7 +334,7 @@ const BattleArena: React.FC<{ petLevel: number; petSkin: string | null; onEnd: (
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>⚔️</div>
         <h3 style={{ margin: '0 0 6px', fontSize: '20px', color: COLORS.danger, fontWeight: '800' }}>Arena de Batalha</h3>
         <p style={{ color: COLORS.textMuted, fontSize: '13px', marginBottom: '16px' }}>Enfrente monstros! Ganhe XP e Moedas se vencer.</p>
-        <button onClick={() => { setHp(maxHp); setEnemyHp(maxHp); setLog([]); setTurn('player'); setResult(null); setPhase('play'); }}
+        <button onClick={() => { UISound.play("click");  setHp(maxHp); setEnemyHp(maxHp); setLog([]); setTurn('player'); setResult(null); setPhase('play');}}
           style={{ ...btnBase, padding: '12px 32px', background: `linear-gradient(135deg, ${COLORS.danger}, #ff4b2b)`, color: '#FFF', fontSize: '16px' }}>
           Lutar ⚔️
         </button>
@@ -374,15 +375,15 @@ const BattleArena: React.FC<{ petLevel: number; petSkin: string | null; onEnd: (
       {/* Actions */}
       {!result && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-          <button onClick={() => attack('light')} disabled={turn !== 'player'}
+          <button onClick={() => { UISound.play("click"); attack('light')}} disabled={turn !== 'player'}
             style={{ ...btnBase, padding: '10px', background: turn === 'player' ? COLORS.secondary : '#333', color: '#FFF', opacity: turn === 'player' ? 1 : 0.5 }}>
             ⚡ Rápido
           </button>
-          <button onClick={() => attack('heavy')} disabled={turn !== 'player'}
+          <button onClick={() => { UISound.play("click"); attack('heavy')}} disabled={turn !== 'player'}
             style={{ ...btnBase, padding: '10px', background: turn === 'player' ? COLORS.danger : '#333', color: '#FFF', opacity: turn === 'player' ? 1 : 0.5 }}>
             💥 Pesado
           </button>
-          <button onClick={() => attack('heal')} disabled={turn !== 'player'}
+          <button onClick={() => { UISound.play("click"); attack('heal')}} disabled={turn !== 'player'}
             style={{ ...btnBase, padding: '10px', background: turn === 'player' ? COLORS.success : '#333', color: '#FFF', opacity: turn === 'player' ? 1 : 0.5 }}>
             💚 Curar
           </button>
@@ -434,7 +435,7 @@ const QuizGame: React.FC<{ onEnd: (coins: number) => void }> = ({ onEnd }) => {
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧠</div>
         <h3 style={{ margin: '0 0 6px', fontSize: '20px', color: COLORS.purple, fontWeight: '800' }}>Quiz do Pet</h3>
         <p style={{ color: COLORS.textMuted, fontSize: '13px', marginBottom: '16px' }}>5 perguntas rápidas! 50 moedas por acerto.</p>
-        <button onClick={() => { setQIndex(0); setCorrect(0); setSelected(null); setPhase('play'); }}
+        <button onClick={() => { UISound.play("click");  setQIndex(0); setCorrect(0); setSelected(null); setPhase('play');}}
           style={{ ...btnBase, padding: '12px 32px', background: `linear-gradient(135deg, ${COLORS.purple}, #fbc2eb)`, color: '#000', fontSize: '16px' }}>
           Começar 🧠
         </button>
@@ -468,7 +469,7 @@ const QuizGame: React.FC<{ onEnd: (coins: number) => void }> = ({ onEnd }) => {
             else if (i === selected) bg = COLORS.danger;
           }
           return (
-            <button key={i} onClick={() => handleAnswer(i)}
+            <button key={i} onClick={() => { UISound.play("click"); handleAnswer(i)}}
               style={{ ...btnBase, padding: '12px', background: bg, color: '#FFF', textAlign: 'left', border: '1px solid rgba(255,255,255,0.1)' }}>
               {opt}
             </button>
@@ -780,13 +781,13 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             Seu pet virtual definitivo. Alimente, jogue, evolua e conquiste.
           </p>
           <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-            onClick={() => setStarted(true)}
+            onClick={() => { UISound.play("click"); setStarted(true)}}
             style={{ ...btnBase, padding: '16px 48px', background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`, color: '#000', fontSize: '18px', fontWeight: '900', letterSpacing: '1px', boxShadow: `0 0 30px ${COLORS.primary}44` }}>
             ENTRAR
           </motion.button>
         </div>
         {/* Back */}
-        <button onClick={onClose}
+        <button onClick={(e) => { UISound.play("click"); onClose(e); }}
           style={{ ...btnBase, position: 'absolute', top: 20, left: 20, padding: '10px 20px', background: 'rgba(255,255,255,0.05)', color: COLORS.textMuted, border: '1px solid rgba(255,255,255,0.1)' }}>
           ← Voltar
         </button>
@@ -842,11 +843,11 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           {/* Quick Actions */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '4px' }}>
-            <button onClick={() => { if (!isSleeping) { setAffection(a => Math.min(100, a + 20)); gainXp(10); } }}
+            <button onClick={() => { UISound.play("click");  if (!isSleeping) { setAffection(a => Math.min(100, a + 20)); gainXp(10);} }}
               style={{ ...btnBase, padding: '12px', background: 'rgba(161,140,209,0.15)', color: COLORS.purple, border: '1px solid rgba(161,140,209,0.2)' }}>
               🤗 Acariciar
             </button>
-            <button onClick={() => setIsSleeping(!isSleeping)}
+            <button onClick={() => { UISound.play("click"); setIsSleeping(!isSleeping)}}
               style={{ ...btnBase, padding: '12px', background: isSleeping ? 'rgba(79,172,254,0.2)' : 'rgba(255,255,255,0.05)', color: isSleeping ? COLORS.primary : COLORS.textMuted, border: `1px solid ${isSleeping ? 'rgba(79,172,254,0.3)' : 'rgba(255,255,255,0.08)'}` }}>
               {isSleeping ? '⏰ Acordar' : '😴 Dormir'}
             </button>
@@ -867,7 +868,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       if (activeGame) {
         return (
           <div>
-            <button onClick={() => setActiveGame(null)}
+            <button onClick={() => { UISound.play("click"); setActiveGame(null)}}
               style={{ ...btnBase, padding: '8px 16px', background: 'rgba(255,255,255,0.05)', color: COLORS.textMuted, marginBottom: '12px', fontSize: '12px' }}>
               ← Voltar aos Jogos
             </button>
@@ -888,7 +889,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {games.map(g => (
             <motion.button key={g.id} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setActiveGame(g.id)}
+              onClick={() => { UISound.play("click"); setActiveGame(g.id)}}
               style={{ ...btnBase, padding: '20px 12px', background: `linear-gradient(135deg, ${g.color}22, ${g.color}08)`, color: '#FFF', border: `1px solid ${g.color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', borderRadius: '20px' }}>
               <span style={{ fontSize: '32px' }}>{g.icon}</span>
               <span style={{ fontWeight: '800', fontSize: '13px' }}>{g.name}</span>
@@ -915,14 +916,14 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 { type: 'potion', icon: '💉', name: 'Poção', cost: 40 },
                 { type: 'seed', icon: '🌱', name: 'Semente', cost: 20 },
               ].map(item => (
-                <button key={item.type} onClick={() => buyFood(item.type, item.cost)}
+                <button key={item.type} onClick={() => { UISound.play("click"); buyFood(item.type, item.cost)}}
                   disabled={coins < item.cost}
                   style={{ ...btnBase, padding: '10px', background: coins >= item.cost ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)', color: coins >= item.cost ? '#FFF' : '#555', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{item.icon} {item.name} ({foodStock[item.type] || 0})</span>
                   <span style={{ color: COLORS.accent, fontSize: '12px' }}>{item.cost}</span>
                 </button>
               ))}
-              <button onClick={buyLootBox} disabled={coins < 50}
+              <button onClick={(e) => { UISound.play("click"); buyLootBox(e); }} disabled={coins < 50}
                 style={{ ...btnBase, padding: '10px', background: 'linear-gradient(135deg, #f6d365, #fda085)', color: '#000', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: '900' }}>
                 <span>🎁 Caixa Misteriosa</span>
                 <span style={{ fontSize: '12px' }}>50</span>
@@ -941,7 +942,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 const equipped = equippedSkin === skin.n;
                 return (
                   <button key={skin.n}
-                    onClick={() => owned ? setEquippedSkin(equipped ? null : skin.n) : buyItem(`Skin_${skin.n}`, skin.c)}
+                    onClick={() => { UISound.play("click"); owned ? setEquippedSkin(equipped ? null : skin.n) : buyItem(`Skin_${skin.n}`, skin.c); }}
                     disabled={!owned && coins < skin.c}
                     style={{ ...btnBase, padding: '10px', background: equipped ? `${COLORS.primary}22` : 'rgba(255,255,255,0.04)', color: equipped ? COLORS.primary : owned ? '#FFF' : '#666', border: `1px solid ${equipped ? COLORS.primary + '44' : 'rgba(255,255,255,0.06)'}` }}>
                     {skin.n} {owned ? (equipped ? '✓' : '') : `🪙${skin.c}`}
@@ -961,7 +962,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 const equipped = equippedMinipet === m.n;
                 return (
                   <button key={m.n}
-                    onClick={() => owned ? setEquippedMinipet(equipped ? null : m.n) : buyItem(`Minipet_${m.n}`, m.c)}
+                    onClick={() => { UISound.play("click"); owned ? setEquippedMinipet(equipped ? null : m.n) : buyItem(`Minipet_${m.n}`, m.c); }}
                     disabled={!owned && coins < m.c}
                     style={{ ...btnBase, padding: '10px', background: equipped ? `${COLORS.success}22` : 'rgba(255,255,255,0.04)', color: equipped ? COLORS.success : '#FFF', border: `1px solid ${equipped ? COLORS.success + '44' : 'rgba(255,255,255,0.06)'}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                     <span style={{ fontSize: '24px' }}>{m.i}</span>
@@ -982,8 +983,8 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 const equipped = equippedBg === bg.n || (bg.n === 'Padrão' && !equippedBg);
                 return (
                   <button key={bg.n}
-                    onClick={() => {
-                      if (bg.n === 'Padrão') { setEquippedBg(null); return; }
+                    onClick={() => { UISound.play("click"); 
+                      if (bg.n === 'Padrão') { setEquippedBg(null); return;}
                       if (owned) setEquippedBg(equipped ? null : bg.n);
                       else buyItem(`Bg_${bg.n}`, bg.c);
                     }}
@@ -1012,12 +1013,12 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div>
             <h4 style={{ color: COLORS.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px' }}>Jardim 🌱</h4>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button onClick={plantSeed} disabled={foodStock['seed'] <= 0 || garden.length >= 3}
+              <button onClick={(e) => { UISound.play("click"); plantSeed(e); }} disabled={foodStock['seed'] <= 0 || garden.length >= 3}
                 style={{ ...btnBase, padding: '10px 16px', background: foodStock['seed'] > 0 ? COLORS.success + '22' : 'rgba(255,255,255,0.04)', color: COLORS.success, border: `1px solid ${COLORS.success}33` }}>
                 🌱 Plantar ({foodStock['seed']})
               </button>
               {garden.map(g => (
-                <motion.button key={g.id} whileTap={{ scale: 0.9 }} onClick={() => harvestPlant(g.id, g.stage)}
+                <motion.button key={g.id} whileTap={{ scale: 0.9 }} onClick={() => { UISound.play("click"); harvestPlant(g.id, g.stage)}}
                   style={{ ...btnBase, padding: '10px', background: g.stage === 3 ? COLORS.accent + '22' : 'rgba(255,255,255,0.04)', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', fontSize: '24px' }}>
                   {g.stage === 0 ? '🌱' : g.stage === 1 ? '🌿' : g.stage === 2 ? '🌳' : '🍎'}
                 </motion.button>
@@ -1029,7 +1030,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <h4 style={{ color: COLORS.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px' }}>Evolução</h4>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {(['neutral', 'dragon', 'mecha', 'hero', 'dark'] as const).map(e => (
-                <button key={e} onClick={() => { if (level >= 20 || e === 'neutral') setEvolution(e); }}
+                <button key={e} onClick={() => { UISound.play("click");  if (level >= 20 || e === 'neutral') setEvolution(e);}}
                   disabled={level < 20 && e !== 'neutral'}
                   style={{ ...btnBase, padding: '8px 14px', background: evolution === e ? `${COLORS.primary}22` : 'rgba(255,255,255,0.04)', color: evolution === e ? COLORS.primary : level < 20 && e !== 'neutral' ? '#444' : '#AAA', border: `1px solid ${evolution === e ? COLORS.primary + '44' : 'rgba(255,255,255,0.06)'}`, fontSize: '12px' }}>
                   {e === 'neutral' ? '🐾 Normal' : e === 'dragon' ? '🐉 Dragão' : e === 'mecha' ? '🤖 Mecha' : e === 'hero' ? '🦸 Herói' : '😈 Dark'}
@@ -1067,10 +1068,10 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i < skills[skill.key] ? COLORS.success : 'rgba(255,255,255,0.1)' }} />
                 ))}
               </div>
-              <button onClick={() => {
+              <button onClick={() => { UISound.play("click"); 
                 if (skillPoints > 0 && skills[skill.key] < skill.max) {
                   setSkillPoints(s => s - 1);
-                  setSkills(s => ({ ...s, [skill.key]: s[skill.key] + 1 }));
+                  setSkills(s => ({ ...s, [skill.key]: s[skill.key] + 1}));
                 }
               }}
                 disabled={skillPoints === 0 || skills[skill.key] >= skill.max}
@@ -1087,7 +1088,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             ) : (
               <div style={{ display: 'flex', gap: '6px' }}>
                 {['Cientista', 'Mago', 'Gamer'].map(prof => (
-                  <button key={prof} onClick={() => setProfession(prof)}
+                  <button key={prof} onClick={() => { UISound.play("click"); setProfession(prof)}}
                     disabled={profession !== null && profession !== prof}
                     style={{ ...btnBase, flex: 1, padding: '10px', background: profession === prof ? `${COLORS.primary}22` : 'rgba(255,255,255,0.04)', color: profession === prof ? COLORS.primary : '#AAA', border: `1px solid ${profession === prof ? COLORS.primary + '44' : 'rgba(255,255,255,0.06)'}`, fontSize: '12px' }}>
                     {prof === 'Cientista' ? '🔬' : prof === 'Mago' ? '🧙' : '🎮'} {prof}
@@ -1119,7 +1120,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             );
           })}
-          <button onClick={() => setQuests(defaultQuests)}
+          <button onClick={() => { UISound.play("click"); setQuests(defaultQuests)}}
             style={{ ...btnBase, padding: '10px', background: 'rgba(255,255,255,0.04)', color: COLORS.textMuted, border: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', fontSize: '12px' }}>
             🔄 Resetar Missões
           </button>
@@ -1166,7 +1167,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
       {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', flexShrink: 0 }}>
-        <button onClick={onClose}
+        <button onClick={(e) => { UISound.play("click"); onClose(e); }}
           style={{ ...btnBase, padding: '8px 16px', background: 'rgba(255,255,255,0.05)', color: COLORS.textMuted, border: '1px solid rgba(255,255,255,0.1)', fontSize: '13px' }}>
           ← Sair
         </button>
@@ -1249,7 +1250,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           { type: 'potion', icon: '💉' },
         ].map(item => (
           <motion.button key={item.type} whileTap={{ scale: 0.85 }}
-            onClick={() => feedPet(item.type)}
+            onClick={() => { UISound.play("click"); feedPet(item.type)}}
             disabled={foodStock[item.type] <= 0 || isSleeping}
             style={{ ...btnBase, width: '56px', height: '56px', borderRadius: '50%', background: foodStock[item.type] > 0 ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', opacity: foodStock[item.type] > 0 ? 1 : 0.3, padding: 0 }}>
             <span style={{ fontSize: '20px' }}>{item.icon}</span>
@@ -1258,7 +1259,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         ))}
         {/* Chat Toggle */}
         <motion.button whileTap={{ scale: 0.85 }}
-          onClick={() => setShowChat(!showChat)}
+          onClick={() => { UISound.play("click"); setShowChat(!showChat)}}
           style={{ ...btnBase, width: '56px', height: '56px', borderRadius: '50%', background: showChat ? `${COLORS.primary}22` : 'rgba(255,255,255,0.08)', border: `1px solid ${showChat ? COLORS.primary + '44' : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
           <span style={{ fontSize: '20px' }}>💬</span>
         </motion.button>
@@ -1288,7 +1289,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   onKeyDown={e => { if (e.key === 'Enter' && chatInput.trim()) { generateAIResponse(chatInput.trim()); setChatInput(''); } }}
                   placeholder="Fale algo..."
                   style={{ flex: 1, padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#FFF', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
-                <button onClick={() => { if (chatInput.trim()) { generateAIResponse(chatInput.trim()); setChatInput(''); } }}
+                <button onClick={() => { UISound.play("click");  if (chatInput.trim()) { generateAIResponse(chatInput.trim()); setChatInput('');} }}
                   style={{ ...btnBase, padding: '10px 16px', background: COLORS.primary, color: '#000' }}>
                   Enviar
                 </button>
@@ -1319,7 +1320,7 @@ const ChaoGarden: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {tabs.map(tab => {
           const isActive = activeTab === tab.id;
           return (
-            <button key={tab.id} onClick={() => { setActiveTab(tab.id); setActiveGame(null); }}
+            <button key={tab.id} onClick={() => { UISound.play("click");  setActiveTab(tab.id); setActiveGame(null);}}
               style={{
                 ...btnBase, background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
                 color: isActive ? COLORS.primary : COLORS.textMuted, padding: '6px 10px', borderRadius: '12px',

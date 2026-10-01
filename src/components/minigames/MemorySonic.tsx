@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CHARACTERS = [
@@ -227,7 +228,7 @@ export default function MemorySonic({ onClose }: { onClose: () => void }) {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, fontFamily: 'Arial, sans-serif', color: '#FFF', overflow: 'hidden'
         }}>
-        <button onClick={onClose} style={{
+        <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{
           position: 'absolute', top: 15, left: 15, padding: '8px 18px',
           background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)',
           borderRadius: '8px', cursor: 'pointer', fontSize: '14px', zIndex: 10
@@ -248,7 +249,7 @@ export default function MemorySonic({ onClose }: { onClose: () => void }) {
                 key={i}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                 whileHover={unlocked ? { scale: 1.05 } : {}} whileTap={unlocked ? { scale: 0.95 } : {}}
-                onClick={() => unlocked && initGame(i)}
+                onClick={() => { UISound.play("click"); unlocked && initGame(i)}}
                 style={{
                   padding: '16px 10px', borderRadius: '14px', cursor: unlocked ? 'pointer' : 'not-allowed',
                   background: unlocked ? `linear-gradient(135deg, ${lvl.bg[0]}, ${lvl.bg[2]})` : 'rgba(50,50,50,0.5)',
@@ -294,7 +295,7 @@ export default function MemorySonic({ onClose }: { onClose: () => void }) {
         />
       ))}
 
-      <button onClick={() => setGameState('MENU')} style={{
+      <button onClick={() => { UISound.play("click"); setGameState('MENU')}} style={{
         position: 'absolute', top: 15, left: 15, padding: '8px 18px',
         background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)',
         borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 10
@@ -349,7 +350,7 @@ export default function MemorySonic({ onClose }: { onClose: () => void }) {
               key={card.id}
               whileTap={{ scale: 0.92 }}
               animate={shakeCards && !card.matched ? { x: [0, -5, 5, -5, 5, 0], transition: { duration: 0.4 } } : {}}
-              onClick={() => handleCardClick(card.id)}
+              onClick={() => { UISound.play("click"); handleCardClick(card.id)}}
               style={{
                 width: '100%', aspectRatio: '0.8', borderRadius: '10px', cursor: 'pointer',
                 perspective: '600px', position: 'relative'
@@ -439,12 +440,12 @@ export default function MemorySonic({ onClose }: { onClose: () => void }) {
             </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => initGame(levelIndex)}
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { UISound.play("click"); initGame(levelIndex)}}
                 style={{ padding: '12px 30px', fontSize: '14px', fontWeight: 'bold', background: 'linear-gradient(135deg, #1565C0, #42A5F5)', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer' }}>
                 🔄 Repetir
               </motion.button>
               {levelIndex < LEVELS.length - 1 && (
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => initGame(levelIndex + 1)}
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { UISound.play("click"); initGame(levelIndex + 1)}}
                   style={{ padding: '12px 30px', fontSize: '14px', fontWeight: 'bold', background: 'linear-gradient(135deg, #4CAF50, #2E7D32)', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer' }}>
                   ▶ Próxima Fase
                 </motion.button>
@@ -468,11 +469,11 @@ export default function MemorySonic({ onClose }: { onClose: () => void }) {
             <h2 style={{ fontSize: '28px', fontFamily: 'Arial Black', color: '#FF5252', margin: '10px 0' }}>TEMPO ESGOTADO!</h2>
             <p style={{ color: '#AAA', fontSize: '14px', marginBottom: '20px' }}>Você encontrou {matches}/{level.pairs} pares</p>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => initGame(levelIndex)}
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { UISound.play("click"); initGame(levelIndex)}}
                 style={{ padding: '12px 30px', fontSize: '14px', fontWeight: 'bold', background: 'linear-gradient(135deg, #FF5252, #D32F2F)', color: '#FFF', border: 'none', borderRadius: '10px', cursor: 'pointer' }}>
                 🔄 Tentar Novamente
               </motion.button>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setGameState('MENU')}
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { UISound.play("click"); setGameState('MENU')}}
                 style={{ padding: '12px 30px', fontSize: '14px', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', color: '#FFF', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', cursor: 'pointer' }}>
                 Fases
               </motion.button>

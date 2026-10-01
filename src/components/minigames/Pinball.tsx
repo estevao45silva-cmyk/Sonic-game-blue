@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion } from 'framer-motion';
 
 const Pinball: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -111,7 +112,7 @@ const Pinball: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       }
 
       // Game Over
-      if (state.ball.y > 630) setGameOver(true);
+      if (state.ball.y > 630) UISound.play('lose'); setGameOver(true);
 
       // Bumpers com Glow
       state.bumpers.forEach(b => {
@@ -227,7 +228,7 @@ const Pinball: React.FC<{ onClose: () => void }> = ({ onClose }) => {
              </p>
              <motion.button 
                 whileHover={{ scale: 1.05, boxShadow: '0 0 30px #ff007f' }} whileTap={{ scale: 0.95 }}
-                onClick={() => { gameState.current.score=0; gameState.current.level=1; setGameOver(false); setStarted(true); }} 
+                onClick={() => { UISound.play("click");  gameState.current.score=0; gameState.current.level=1; setGameOver(false); setStarted(true);}} 
                 style={{ padding: '15px 40px', background: 'linear-gradient(90deg, #ff007f, #ff00cc)', color: '#FFF', border: 'none', borderRadius: '50px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold' }}>
                 Jogar Agora
              </motion.button>
@@ -249,12 +250,12 @@ const Pinball: React.FC<{ onClose: () => void }> = ({ onClose }) => {
          {gameOver && (
              <motion.div initial={{opacity:0, scale:0.8}} animate={{opacity:1, scale:1}} style={{ position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'rgba(15, 12, 41, 0.9)', backdropFilter: 'blur(5px)' }}>
                 <h2 style={{ color: '#ff007f', fontSize: '30px', fontWeight: '900', marginBottom: '20px', textShadow: '0 0 20px #ff007f' }}>Game Over</h2>
-                <button onClick={() => { gameState.current.score=0; gameState.current.level=1; gameState.current.ball={x:380,y:550,vx:0,vy:-15,radius:15}; setGameOver(false); }} style={{ padding: '15px 30px', background: '#00d2ff', border: 'none', borderRadius: '30px', color: '#000', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}>Tentar Novamente</button>
+                <button onClick={() => { UISound.play("click");  gameState.current.score=0; gameState.current.level=1; gameState.current.ball={x:380,y:550,vx:0,vy:-15,radius:15}; setGameOver(false); }} style={{ padding: '15px 30px', background: '#00d2ff', border: 'none', borderRadius: '30px', color: '#000', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}>Tentar Novamente</button>
              </motion.div>
          )}
       </div>
 
-      <button onClick={onClose} style={{ marginTop: '30px', padding: '12px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ marginTop: '30px', padding: '12px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>
          Voltar ao Menu
       </button>
     </div>

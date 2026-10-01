@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const HalfPipe: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -165,7 +166,7 @@ const HalfPipe: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                  });
               }
            } else if (item.type === 'bomb') {
-              setGameOver(true);
+              UISound.play('lose'); setGameOver(true);
            }
         }
 
@@ -249,7 +250,7 @@ const HalfPipe: React.FC<{ onClose: () => void }> = ({ onClose }) => {
              </p>
              <motion.button 
                 whileHover={{ scale: 1.05, boxShadow: '0 0 30px #f6d365' }} whileTap={{ scale: 0.95 }}
-                onClick={() => setStarted(true)} 
+                onClick={() => { UISound.play("click"); setStarted(true)}} 
                 style={{ padding: '15px 40px', background: 'linear-gradient(90deg, #f6d365, #fda085)', color: '#000', border: 'none', borderRadius: '50px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Acelerar
              </motion.button>
@@ -283,18 +284,18 @@ const HalfPipe: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                <h2 style={{ color: '#ff416c', fontSize: '40px', margin: '0 0 20px 0', textShadow: '0 0 20px #ff416c' }}>COLISÃO DETECTADA</h2>
                <div style={{ fontSize: '20px', color: '#FFF', marginBottom: '30px' }}>Você coletou <strong style={{ color: '#f6d365' }}>{score}</strong> argolas.</div>
                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-                  <motion.button whileHover={{ scale: 1.05 }} onClick={() => { 
-                      stateRef.current = { rings: 0, level: 1, playerAngle: Math.PI / 2, items: [], particles: [], speed: 20, zOffset: 0, itemId: 0 };
+                  <motion.button whileHover={{ scale: 1.05 }} onClick={() => { UISound.play("click");  
+                      stateRef.current = { rings: 0, level: 1, playerAngle: Math.PI / 2, items: [], particles: [], speed: 20, zOffset: 0, itemId: 0};
                       setScore(0); setLevel(1); setGameOver(false); 
                   }} style={{ padding: '15px 40px', background: '#ff416c', color: '#FFF', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Reiniciar Corrida</motion.button>
-                  <button onClick={onClose} style={{ padding: '15px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>Sair</button>
+                  <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ padding: '15px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>Sair</button>
                </div>
             </motion.div>
          )}
       </AnimatePresence>
 
       {!gameOver && (
-         <button onClick={onClose} style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', padding: '12px 30px', background: 'rgba(0,0,0,0.5)', color: '#FFF', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '30px', cursor: 'pointer', backdropFilter: 'blur(5px)', zIndex: 10 }}>Sair da Simulação</button>
+         <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', padding: '12px 30px', background: 'rgba(0,0,0,0.5)', color: '#FFF', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '30px', cursor: 'pointer', backdropFilter: 'blur(5px)', zIndex: 10 }}>Sair da Simulação</button>
       )}
     </div>
   );

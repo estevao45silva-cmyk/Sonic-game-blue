@@ -87,8 +87,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, globalRings, invento
     // Timings adjusted for maximum cinematic feel
     const t0 = setTimeout(() => {
       setIntroState('sega-logo');
-      const segaAudio = new Audio('/imagens/sons/Sega Intro (Sonic 1) - TopperGame.mp3');
-      segaAudio.play().catch(e => console.log('Autoplay prevented by browser:', e));
+      BGMManager.playSega();
     }, 100);
     const t1 = setTimeout(() => {
       setIntroState('ring-drop');

@@ -29,6 +29,10 @@ export class RetroAudio {
     if (!this.ctx) {
       try {
         this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const unlock = () => { if (this.ctx?.state === "suspended") this.ctx.resume(); };
+        window.addEventListener('click', unlock, { passive: true });
+        window.addEventListener('keydown', unlock, { passive: true });
+        window.addEventListener('touchstart', unlock, { passive: true });
       } catch (e) {}
     }
   }
@@ -2027,10 +2031,10 @@ export class MainScene extends Phaser.Scene {
     // ==== THEME COLORING FOR OBSTACLES & ENEMIES ====
     const tintObstacle = (item: any) => {
       if (!item || !item.setTint) return;
-      if (this.currentLevel === 2) item.setTint(0xffb6c1); // Pinkish for Marble/Ruins
-      if (this.currentLevel === 3) item.setTint(0x00ffff); // Neon blue for Starlight
-      if (this.currentLevel === 4) item.setTint(0xff00ff); // Neon pink for Casino
-      if (this.currentLevel === 5) item.setTint(0xff3300); // Red for Volcano
+      if (this.currentLevel === 2) item.setTint(0x00ff00); // Toxic Green for Ruins (contrasts with purple runes)
+      if (this.currentLevel === 3) item.setTint(0xff2222); // Bright Red for Starlight (contrasts with neon blue ground)
+      if (this.currentLevel === 4) item.setTint(0xffff00); // Neon Yellow for Casino (contrasts with pink/cyan)
+      if (this.currentLevel === 5) item.setTint(0x00ffff); // Cyan/Ice for Volcano (contrasts with red magma)
     };
 
     this.enemies.getChildren().forEach(tintObstacle);
@@ -4052,7 +4056,9 @@ export class UIScene extends Phaser.Scene {
       repeat: -1,
     });
 
+    mainScene.events.off("updateRings");
     mainScene.events.on("updateRings", (count: number) => {
+      if (!this.ringsText || !this.ringsText.active) return;
       this.ringsText.setText(`${count}`);
 
       if (count === 0) {
@@ -4084,7 +4090,9 @@ export class UIScene extends Phaser.Scene {
       }
     });
 
+    mainScene.events.off("updateTime");
     mainScene.events.on("updateTime", (timeSec: number) => {
+      if (!this.timeText || !this.timeText.active) return;
       const mins = Math.floor(timeSec / 60);
 
       const secs = Math.floor(timeSec % 60);
@@ -4092,11 +4100,15 @@ export class UIScene extends Phaser.Scene {
       this.timeText.setText(`${mins}:${secs.toString().padStart(2, "0")}`);
     });
 
+    mainScene.events.off("updateScore");
     mainScene.events.on("updateScore", (score: number) => {
+      if (!this.scoreText || !this.scoreText.active) return;
       this.scoreText.setText(`${score}`);
     });
 
+    mainScene.events.off("updateLives");
     mainScene.events.on("updateLives", (lives: number) => {
+      if (!this.livesText || !this.livesText.active) return;
       this.livesText.setText(`x ${lives}`);
     });
 
@@ -4104,6 +4116,7 @@ export class UIScene extends Phaser.Scene {
 
     // Victory Screen
 
+    mainScene.events.off("levelComplete");
     mainScene.events.on(
       "levelComplete",
       (bonus: { timeBonus: number; ringBonus: number }) => {

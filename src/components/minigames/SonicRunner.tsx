@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion } from 'framer-motion';
 
 // ═══════════════════════════════════════════
@@ -91,7 +92,7 @@ export default function SonicRunner({ onClose }: { onClose: () => void }) {
     }
     const g = gameData.current;
     if (action === 'jump' && !g.isJumping) {
-      g.playerVy = JUMP; g.isJumping = true;
+      g.playerVy = JUMP; UISound.play('jump'); UISound.play('jump'); g.isJumping = true;
       for (let i = 0; i < 5; i++) g.particles.push({ x: g.playerX, y: g.groundY, vx: (Math.random()-0.5)*3, vy: -Math.random()*4, life: 15, color: '#FFF', s: 2+Math.random()*2 });
     }
     if (action === 'slide' && !g.isJumping && !g.isSliding) {
@@ -321,7 +322,7 @@ export default function SonicRunner({ onClose }: { onClose: () => void }) {
             if (g.playerY + PLAYER_H > g.groundY - o.h && o.x < g.playerX + 20 && o.x + o.w > g.playerX - 20) {
               if (g.superActive) { /* immune */ o.x = -999; for (let i = 0; i < 8; i++) g.particles.push({ x: ox, y: g.groundY - o.h, vx: (Math.random()-0.5)*8, vy: -Math.random()*6, life: 20, color: '#FF4444', s: 3 }); continue; }
               if (g.shieldActive) { g.shieldHits--; if (g.shieldHits <= 0) { g.shieldActive = false; setPowerUpActive(null); } o.x = -999; continue; }
-              setGameState('GAMEOVER');
+              UISound.play('lose'); setGameState('GAMEOVER');
               setScore(s => { const best = Math.max(Math.floor(g.distance), bestScore); setBestScore(best); localStorage.setItem('runner_best2', best.toString()); return Math.floor(g.distance); });
             }
           } else if (o.type === 'badnik') {
@@ -336,7 +337,7 @@ export default function SonicRunner({ onClose }: { onClose: () => void }) {
             if (g.playerY + PLAYER_H > g.groundY - o.h + 5 && o.x < g.playerX + 18 && o.x + o.w > g.playerX - 18) {
               if (g.superActive) { o.x = -999; for (let i = 0; i < 8; i++) g.particles.push({ x: ox, y: g.groundY - o.h, vx: (Math.random()-0.5)*8, vy: -Math.random()*6, life: 20, color: '#FF4444', s: 3 }); continue; }
               if (g.shieldActive) { g.shieldHits--; if (g.shieldHits <= 0) { g.shieldActive = false; setPowerUpActive(null); } o.x = -999; continue; }
-              setGameState('GAMEOVER');
+              UISound.play('lose'); setGameState('GAMEOVER');
               setScore(s => { const best = Math.max(Math.floor(g.distance), bestScore); setBestScore(best); localStorage.setItem('runner_best2', best.toString()); return Math.floor(g.distance); });
             }
           } else {
@@ -345,7 +346,7 @@ export default function SonicRunner({ onClose }: { onClose: () => void }) {
             if (!slideOk && g.playerY + PLAYER_H > g.groundY - o.h + 5 && o.x < g.playerX + 18 && o.x + o.w > g.playerX - 18) {
               if (g.superActive) { o.x = -999; continue; }
               if (g.shieldActive) { g.shieldHits--; if (g.shieldHits <= 0) { g.shieldActive = false; setPowerUpActive(null); } o.x = -999; continue; }
-              setGameState('GAMEOVER');
+              UISound.play('lose'); setGameState('GAMEOVER');
               setScore(s => { const best = Math.max(Math.floor(g.distance), bestScore); setBestScore(best); localStorage.setItem('runner_best2', best.toString()); return Math.floor(g.distance); });
             }
           }
@@ -539,7 +540,7 @@ export default function SonicRunner({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
-      <button onClick={onClose} style={{ position: 'absolute', top: 15, left: 15, padding: '8px 18px', background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 30 }}>Voltar</button>
+      <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ position: 'absolute', top: 15, left: 15, padding: '8px 18px', background: 'rgba(0,0,0,0.6)', color: '#FFF', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', backdropFilter: 'blur(5px)', zIndex: 30 }}>Voltar</button>
       <style>{`@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
     </motion.div>
   );

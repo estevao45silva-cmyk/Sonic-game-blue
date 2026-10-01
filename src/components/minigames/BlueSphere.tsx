@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { UISound } from "../../utils/audio";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CELL_SIZE = 50;
@@ -69,7 +70,7 @@ const BlueSphere: React.FC<{ onClose: () => void, addGlobalRings: (a: number) =>
       if (x !== player.x || y !== player.y) {
         let cell = grid[x][y];
         if (cell === 2) {
-          setGameOver(true);
+          UISound.play('lose'); setGameOver(true);
         } else if (cell === 1) {
           let newGrid = [...grid];
           newGrid[x][y] = 3; 
@@ -96,7 +97,7 @@ const BlueSphere: React.FC<{ onClose: () => void, addGlobalRings: (a: number) =>
              </p>
              <motion.button 
                 whileHover={{ scale: 1.05, boxShadow: '0 0 30px #00f2fe' }} whileTap={{ scale: 0.95 }}
-                onClick={() => setStarted(true)} 
+                onClick={() => { UISound.play("click"); setStarted(true)}} 
                 style={{ padding: '15px 40px', background: 'linear-gradient(90deg, #4FACFE, #00f2fe)', color: '#000', border: 'none', borderRadius: '50px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Iniciar Sistema
              </motion.button>
@@ -174,18 +175,18 @@ const BlueSphere: React.FC<{ onClose: () => void, addGlobalRings: (a: number) =>
                </h2>
                <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '30px' }}>
                   {win ? (
-                     <motion.button whileHover={{ scale: 1.05 }} onClick={() => setLevel(l => l + 1)} style={{ padding: '15px 40px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Próximo Nível</motion.button>
+                     <motion.button whileHover={{ scale: 1.05 }} onClick={() => { UISound.play("click"); setLevel(l => l + 1)}} style={{ padding: '15px 40px', background: '#00f2fe', color: '#000', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Próximo Nível</motion.button>
                   ) : (
-                     <motion.button whileHover={{ scale: 1.05 }} onClick={() => { setLevel(1); generateGrid(1); }} style={{ padding: '15px 40px', background: '#ff416c', color: '#FFF', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Reiniciar</motion.button>
+                     <motion.button whileHover={{ scale: 1.05 }} onClick={() => { UISound.play("click");  setLevel(1); generateGrid(1);}} style={{ padding: '15px 40px', background: '#ff416c', color: '#FFF', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>Reiniciar</motion.button>
                   )}
-                  <button onClick={onClose} style={{ padding: '15px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>Sair</button>
+                  <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ padding: '15px 30px', background: 'transparent', color: '#AAA', border: '1px solid #555', borderRadius: '30px', cursor: 'pointer' }}>Sair</button>
                </div>
             </motion.div>
          )}
       </AnimatePresence>
 
       {!win && !gameOver && (
-         <button onClick={onClose} style={{ position: 'absolute', bottom: 40, padding: '12px 30px', background: 'rgba(0,0,0,0.5)', color: '#FFF', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '30px', cursor: 'pointer', backdropFilter: 'blur(5px)' }}>Abortar Missão</button>
+         <button onClick={(e) => { UISound.play("click"); onClose(e); }} style={{ position: 'absolute', bottom: 40, padding: '12px 30px', background: 'rgba(0,0,0,0.5)', color: '#FFF', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '30px', cursor: 'pointer', backdropFilter: 'blur(5px)' }}>Abortar Missão</button>
       )}
     </div>
   );
